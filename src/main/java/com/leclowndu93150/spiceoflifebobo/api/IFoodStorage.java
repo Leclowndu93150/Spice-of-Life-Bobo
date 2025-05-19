@@ -4,6 +4,7 @@ import com.leclowndu93150.spiceoflifebobo.data.ActiveFood;
 import net.minecraft.world.item.Item;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IFoodStorage {
     /**
@@ -35,6 +36,27 @@ public interface IFoodStorage {
      * Get the list of active food effects
      */
     List<ActiveFood> getActiveFoods();
+
+    /**
+     * Get foods grouped by type for rendering
+     */
+    default Map<Item, List<ActiveFood>> getFoodsByType() {
+        return Map.of();
+    }
+
+    /**
+     * Get the count of a specific food type
+     */
+    default int getFoodTypeCount(Item item) {
+        return 0;
+    }
+
+    /**
+     * Check if the given food is actively ticking down
+     */
+    default boolean isActiveTicking(ActiveFood food) {
+        return false;
+    }
 
     /**
      * Get the maximum number of foods the player can eat

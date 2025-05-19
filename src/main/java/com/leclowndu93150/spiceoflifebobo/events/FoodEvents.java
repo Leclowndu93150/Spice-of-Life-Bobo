@@ -46,8 +46,10 @@ public class FoodEvents {
 
         player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
             if (foodStorage.canEatFood()) {
+                // Player can eat the food
                 foodStorage.addFood(new ActiveFood(item, effects));
             } else {
+                // Player has reached the maximum food limit
                 player.displayClientMessage(
                         Component.translatable("message.spiceoflifebobo.stomach_full", foodStorage.getMaxFoods()), true);
             }

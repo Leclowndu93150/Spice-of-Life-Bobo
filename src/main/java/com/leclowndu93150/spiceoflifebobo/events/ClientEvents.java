@@ -10,29 +10,51 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.UseAnim;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
-@Mod.EventBusSubscriber(value = Dist.CLIENT)
+@OnlyIn(Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = SpiceOfLifeBobo.MOD_ID, value = Dist.CLIENT)
 public class ClientEvents {
-    private static final ResourceLocation FOOD_HUD_TEXTURE = new ResourceLocation(SpiceOfLifeBobo.MOD_ID, "textures/gui/food_hud.png");
+    private static final Minecraft client = Minecraft.getInstance();
+    private static int mouseX = 0;
+    private static int mouseY = 0;
+    private static Item hoveredFoodItem = null;
+    private static List<ActiveFood> hoveredFoods = null;
 
     @SubscribeEvent
-    public void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
-        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) return;
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        int screenWidth = client.getWindow().getScreenWidth();
+        int screenHeight = client.getWindow().getScreenHeight();
+
+        if (screenWidth > 0 && screenHeight > 0) {
+            mouseX = (int) (client.mouseHandler.xpos() * client.getWindow().getGuiScaledWidth() / screenWidth);
+            mouseY = (int) (client.mouseHandler.ypos() * client.getWindow().getGuiScaledHeight() / screenHeight);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
+        if (event.getOverlay() != VanillaGuiOverlay.FOOD_LEVEL.type()) return;
 
         if (!SpiceOfLifeConfig.CLIENT.showFoodHud.get()) return;
 
@@ -40,110 +62,190 @@ public class ClientEvents {
         Player player = minecraft.player;
         if (player == null) return;
 
+        hoveredFoodItem = null;
+        hoveredFoods = null;
+
         player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
-            List<ActiveFood> activeFoods = foodStorage.getActiveFoods();
-            if (activeFoods.isEmpty()) return;
+            Map<Item, List<ActiveFood>> foodsByType = foodStorage.getFoodsByType();
+            if (foodsByType.isEmpty()) return;
 
-            int width = minecraft.getWindow().getGuiScaledWidth();
-            int height = minecraft.getWindow().getGuiScaledHeight();
+            int width = minecraft.getWindow().getGuiScaledWidth() / 2 + 91;
+            boolean useLargeIcons = SpiceOfLifeConfig.CLIENT.useLargeIcons.get();
+            int height = minecraft.getWindow().getGuiScaledHeight() - 39 - (useLargeIcons ? 6 : 0);
 
-            int x, y;
-            SpiceOfLifeConfig.HudPosition position = SpiceOfLifeConfig.CLIENT.hudPosition.get();
+            int offset = 1;
+            int size = useLargeIcons ? 14 : 9;
 
-            switch (position) {
-                case TOP_LEFT:
-                    x = 5 + SpiceOfLifeConfig.CLIENT.hudOffsetX.get();
-                    y = 5 + SpiceOfLifeConfig.CLIENT.hudOffsetY.get();
-                    break;
-                case TOP_RIGHT:
-                    x = width - 65 + SpiceOfLifeConfig.CLIENT.hudOffsetX.get();
-                    y = 5 + SpiceOfLifeConfig.CLIENT.hudOffsetY.get();
-                    break;
-                case BOTTOM_LEFT:
-                    x = 5 + SpiceOfLifeConfig.CLIENT.hudOffsetX.get();
-                    y = height - 5 - (activeFoods.size() * 24) + SpiceOfLifeConfig.CLIENT.hudOffsetY.get();
-                    break;
-                case BOTTOM_RIGHT:
-                    x = width - 65 + SpiceOfLifeConfig.CLIENT.hudOffsetX.get();
-                    y = height - 5 - (activeFoods.size() * 24) + SpiceOfLifeConfig.CLIENT.hudOffsetY.get();
-                    break;
-                case CENTER_LEFT:
-                    x = 5 + SpiceOfLifeConfig.CLIENT.hudOffsetX.get();
-                    y = height / 2 - (activeFoods.size() * 12) + SpiceOfLifeConfig.CLIENT.hudOffsetY.get();
-                    break;
-                case CENTER_RIGHT:
-                default:
-                    x = width - 65 + SpiceOfLifeConfig.CLIENT.hudOffsetX.get();
-                    y = height / 2 - (activeFoods.size() * 12) + SpiceOfLifeConfig.CLIENT.hudOffsetY.get();
-                    break;
+            // Render one slot per food type, but properly show count
+            for (Map.Entry<Item, List<ActiveFood>> entry : foodsByType.entrySet()) {
+                Item foodItem = entry.getKey();
+                List<ActiveFood> foodsOfType = entry.getValue();
+                if (foodsOfType.isEmpty()) continue;
+
+                // Sort foods by duration (shortest first) - this should match the server order
+                foodsOfType.sort(Comparator.comparing(ActiveFood::getDuration));
+
+                // The first food in the list is the one that's ticking
+                ActiveFood activeTicking = foodsOfType.get(0);
+
+                renderFoodTypeSlot(event.getGuiGraphics(), activeTicking, foodsOfType.size(), width, size, offset, height, useLargeIcons, foodStorage);
+
+                int startWidth = width - (size * offset) - offset + 1;
+                if (mouseX >= startWidth && mouseX <= startWidth + size &&
+                        mouseY >= height && mouseY <= height + size) {
+                    hoveredFoodItem = foodItem;
+                    hoveredFoods = new ArrayList<>(foodsOfType); // Make a copy to avoid modification
+                }
+
+                offset++;
             }
 
-            GuiGraphics graphics = event.getGuiGraphics();
-            renderFoodHud(graphics, foodStorage, x, y);
+            if (hoveredFoods != null && !hoveredFoods.isEmpty()) {
+                renderFoodTooltip(event.getGuiGraphics(), hoveredFoods, mouseX, mouseY, foodStorage);
+            }
         });
     }
 
-    private void renderFoodHud(GuiGraphics graphics, IFoodStorage foodStorage, int x, int y) {
-        List<ActiveFood> activeFoods = foodStorage.getActiveFoods();
+    private static void renderFoodTypeSlot(GuiGraphics graphics, ActiveFood activeTicking, int count,
+                                           int width, int size, int offset, int height,
+                                           boolean useLargeIcons, IFoodStorage foodStorage) {
+        ItemStack foodStack = new ItemStack(activeTicking.getItem());
+        boolean isDrink = foodStack.getUseAnimation() == UseAnim.DRINK;
 
-        // Render background panel
-        graphics.setColor(1.0F, 1.0F, 1.0F, 0.8F);
-        graphics.blit(FOOD_HUD_TEXTURE, x, y, 0, 0, 60, activeFoods.size() * 24);
-        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        int bgColor = isDrink ? FastColor.ARGB32.color(96, 52, 104, 163) : FastColor.ARGB32.color(96, 0, 0, 0);
+        int yellow = FastColor.ARGB32.color(255, 255, 191, 0);
 
-        // Render food info
-        int yOffset = 0;
-        for (ActiveFood food : activeFoods) {
-            // Render item icon
-            ItemStack foodStack = new ItemStack(food.getItem());
-            graphics.renderItem(foodStack, x + 5, y + yOffset + 4);
+        int startWidth = width - (size * offset) - offset + 1;
+        float ticksLeftPercent = (float) activeTicking.getDuration() / activeTicking.getMaxDuration();
+        int barHeight = Math.max(1, (int)((size + 2f) * ticksLeftPercent));
+        int barColor = ticksLeftPercent < SpiceOfLifeConfig.COMMON.lowTimePercentage.get() ?
+                FastColor.ARGB32.color(180, 255, 10, 10) : FastColor.ARGB32.color(96, 0, 0, 0);
 
-            // Render food name
-            Component name = foodStack.getHoverName();
-            graphics.drawString(Minecraft.getInstance().font, name, x + 25, y + yOffset + 4, 0xFFFFFF, true);
+        float time = (float) activeTicking.getDuration() / (20 * 60);
+        boolean isSeconds = false;
+        String minutes = String.format("%.0f", time);
 
-            // Render duration bar
-            float durationPercent = food.getRemainingDurationPercent();
-            int barWidth = (int)(50 * durationPercent);
-
-            // Bar background
-            graphics.fill(x + 25, y + yOffset + 16, x + 25 + 50, y + yOffset + 20, 0x80000000);
-
-            // Bar filled part
-            int barColor = getBarColor(durationPercent);
-            graphics.fill(x + 25, y + yOffset + 16, x + 25 + barWidth, y + yOffset + 20, barColor);
-
-            // Move to next food
-            yOffset += 24;
+        if (time < 1f) {
+            isSeconds = true;
+            time = (float) activeTicking.getDuration() / 20;
+            minutes = String.format("%.0f", time);
         }
-    }
 
-    private int getBarColor(float percent) {
-        if (percent > 0.6f) {
-            return 0xFF00CC00; // Green
-        } else if (percent > 0.3f) {
-            return 0xFFCCCC00; // Yellow
+        // Draw slot background
+        graphics.fill(startWidth, height, startWidth + size, height + size, bgColor);
+        // Draw timer bar
+        graphics.fill(startWidth, Math.max(height, height - barHeight + size), startWidth + size, height + size, barColor);
+
+        // Center the item in the slot
+        var pose = graphics.pose();
+        pose.pushPose();
+
+        // Scale and center like the Valheim mod
+        float scale = useLargeIcons ? 0.75f : 0.5f;
+        pose.scale(scale, scale, scale);
+
+        // Position the item centered in the slot
+        float scaleFactor = 1f / scale;
+        float centerX = (startWidth + size/2f) * scaleFactor - 8f; // 8 is half of item renderer size (16)
+        float centerY = (height + size/2f) * scaleFactor - 8f;
+
+        // Render the item
+        graphics.renderItem(foodStack, (int)centerX, (int)centerY);
+
+        pose.popPose();
+
+        // Draw the time remaining
+        int textColor = isSeconds ? FastColor.ARGB32.color(255, 237, 57, 57) : FastColor.ARGB32.color(255, 255, 255, 255);
+        int textX = startWidth;
+        if (minutes.length() == 1) {
+            textX += size / 2 - 2; // Center single digit
         } else {
-            return 0xFFCC0000; // Red
+            textX += size / 2 - 5; // Center double digit
+        }
+        graphics.drawString(client.font, minutes, textX, height + 10, textColor);
+
+        // Show a count if there are multiple of this food
+        if (count > 1) {
+            String countText = "x" + count;
+            graphics.drawString(client.font, countText, startWidth + 2, height, yellow);
+        }
+
+        // Show a "+" if there are multiple effects
+        if (activeTicking.getEffects().size() > 1) {
+            graphics.drawString(client.font, "+" + (activeTicking.getEffects().size() - 1), startWidth + size - 6, height, yellow);
         }
     }
 
-    @SubscribeEvent
-    public void onItemTooltip(ItemTooltipEvent event) {
-        if (!SpiceOfLifeConfig.COMMON.showTooltips.get()) return;
+    private static void renderFoodTooltip(GuiGraphics graphics, List<ActiveFood> foodsOfType,
+                                          int mouseX, int mouseY, IFoodStorage foodStorage) {
+        if (foodsOfType.isEmpty()) return;
 
-        ItemStack stack = event.getItemStack();
-        Item item = stack.getItem();
-        List<Component> tooltip = event.getToolTip();
+        List<Component> tooltip = new ArrayList<>();
+        ActiveFood firstFood = foodsOfType.get(0);
 
-        List<FoodEffect> effects = SpiceOfLifeBobo.getFoodEffectManager().getEffectsForFood(item);
-        if (effects.isEmpty()) return;
+        ItemStack foodStack = new ItemStack(firstFood.getItem());
+        tooltip.add(foodStack.getHoverName());
 
-        // Add separator
+        // Show how many of this food type are active
+        if (foodsOfType.size() > 1) {
+            tooltip.add(Component.literal("x" + foodsOfType.size() + " " + foodStack.getHoverName().getString())
+                    .withStyle(ChatFormatting.YELLOW));
+        }
+
+        tooltip.add(Component.literal(""));
+
+        // Show durations for all foods of this type
+        for (int i = 0; i < foodsOfType.size(); i++) {
+            ActiveFood food = foodsOfType.get(i);
+            int seconds = food.getDuration() / 20;
+            int minutes = seconds / 60;
+            seconds %= 60;
+
+            boolean isActive = foodStorage.isActiveTicking(food);
+            String prefix = foodsOfType.size() > 1 ? "#" + (i+1) + ": " : "";
+            ChatFormatting color = isActive ? ChatFormatting.GREEN : ChatFormatting.GRAY;
+
+            if (minutes > 0) {
+                tooltip.add(Component.literal(prefix + (isActive ? "➤ " : ""))
+                        .append(Component.translatable("tooltip.spiceoflifebobo.duration.minutes", minutes, seconds))
+                        .withStyle(color));
+            } else {
+                tooltip.add(Component.literal(prefix + (isActive ? "➤ " : ""))
+                        .append(Component.translatable("tooltip.spiceoflifebobo.duration.seconds", seconds))
+                        .withStyle(color));
+            }
+        }
+
         tooltip.add(Component.literal(""));
         tooltip.add(Component.translatable("tooltip.spiceoflifebobo.effects").withStyle(ChatFormatting.GOLD));
 
-        // Add duration
+        // Show effects for the first food (they should all have the same effects)
+        for (FoodEffect effect : firstFood.getEffects()) {
+            for (FoodAttributeModifier modifier : effect.getAttributeModifiers()) {
+                // Calculate stacked effect potency
+                double baseAmount = modifier.getAmount();
+                double stackedAmount = baseAmount * foodsOfType.size();
+
+                tooltip.add(formatAttributeModifier(modifier, stackedAmount));
+            }
+        }
+
+        graphics.renderComponentTooltip(client.font, tooltip, mouseX, mouseY);
+    }
+
+    @SubscribeEvent
+    public static void onItemTooltip(ItemTooltipEvent event) {
+        if (!SpiceOfLifeConfig.COMMON.showTooltips.get()) return;
+
+        ItemStack stack = event.getItemStack();
+        List<Component> tooltip = event.getToolTip();
+
+        List<FoodEffect> effects = SpiceOfLifeBobo.getFoodEffectManager().getEffectsForFood(stack.getItem());
+        if (effects.isEmpty()) return;
+
+        tooltip.add(Component.literal(""));
+        tooltip.add(Component.translatable("tooltip.spiceoflifebobo.effects").withStyle(ChatFormatting.GOLD));
+
         int maxDuration = 0;
         for (FoodEffect effect : effects) {
             maxDuration = Math.max(maxDuration, effect.getDuration());
@@ -163,12 +265,7 @@ public class ClientEvents {
 
         for (FoodEffect effect : effects) {
             for (FoodAttributeModifier modifier : effect.getAttributeModifiers()) {
-                Attribute attribute = modifier.getAttribute();
-                double amount = modifier.getAmount();
-                AttributeModifier.Operation operation = modifier.getOperation();
-
-                Component modifierText = formatAttributeModifier(attribute, amount, operation);
-                tooltip.add(modifierText);
+                tooltip.add(formatAttributeModifier(modifier, modifier.getAmount()));
             }
         }
 
@@ -180,19 +277,27 @@ public class ClientEvents {
                     tooltip.add(Component.translatable("tooltip.spiceoflifebobo.cannot_eat", foodStorage.getMaxFoods())
                             .withStyle(ChatFormatting.RED));
                 }
+
+                // Show current stack count if applicable
+                Item item = stack.getItem();
+                int count = foodStorage.getFoodTypeCount(item);
+                if (count > 0) {
+                    tooltip.add(Component.literal(""));
+                    tooltip.add(Component.literal("Currently active: x" + count)
+                            .withStyle(ChatFormatting.GREEN));
+                }
             });
         }
     }
 
-    private Component formatAttributeModifier(Attribute attribute, double amount, AttributeModifier.Operation operation) {
-        Component attributeName = Component.translatable(attribute.getDescriptionId());
+    private static Component formatAttributeModifier(FoodAttributeModifier modifier, double stackedAmount) {
+        Component attributeName = Component.translatable(modifier.getAttribute().getDescriptionId());
 
         String format;
         ChatFormatting color;
+        double amount = stackedAmount;
 
-        // Format based on operation and whether it's positive or negative
-        if (operation == AttributeModifier.Operation.ADDITION) {
-            // Addition: +X or -X
+        if (modifier.getOperation() == AttributeModifier.Operation.ADDITION) {
             if (amount > 0) {
                 format = "+%.1f %s";
                 color = ChatFormatting.BLUE;
@@ -200,9 +305,7 @@ public class ClientEvents {
                 format = "%.1f %s";
                 color = ChatFormatting.RED;
             }
-        } else if (operation == AttributeModifier.Operation.MULTIPLY_BASE) {
-            // Multiply base: +X% or -X%
-            // Convert to percentage
+        } else if (modifier.getOperation() == AttributeModifier.Operation.MULTIPLY_BASE) {
             amount = amount * 100;
             if (amount > 0) {
                 format = "+%.0f%% %s";
@@ -212,8 +315,6 @@ public class ClientEvents {
                 color = ChatFormatting.RED;
             }
         } else {
-            // Multiply total: +X% or -X%
-            // Convert to percentage
             amount = amount * 100;
             if (amount > 0) {
                 format = "+%.0f%% %s (Total)";

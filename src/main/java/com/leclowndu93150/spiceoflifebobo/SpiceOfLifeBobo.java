@@ -43,7 +43,7 @@ public class SpiceOfLifeBobo {
 
     public static final RegistryObject<Attribute> FOOD_MEMORY = ATTRIBUTES.register("food_memory",
             () -> new RangedAttribute("attribute.spiceoflifebobo.food_memory", 3.0D, 1.0D, 10.0D));
-                    //.setDescription("How many different foods you can benefit from at once"));
+    //.setDescription("How many different foods you can benefit from at once"));
 
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, SpiceOfLifeBobo.MOD_ID);
 
@@ -68,6 +68,8 @@ public class SpiceOfLifeBobo {
         modEventBus.addListener(this::setup);
         modEventBus.addListener(this::clientSetup);
 
+        // DON'T register capabilities here - it's already being done in FoodStorageCapability.RegistrationHandler
+
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SpiceOfLifeConfig.COMMON_SPEC);
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, SpiceOfLifeConfig.CLIENT_SPEC);
 
@@ -79,6 +81,8 @@ public class SpiceOfLifeBobo {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new FoodEvents());
         MinecraftForge.EVENT_BUS.register(new PlayerEvents());
+        // Register capability events
+        MinecraftForge.EVENT_BUS.register(FoodStorageCapability.EventHandler.class);
 
         MinecraftForge.EVENT_BUS.addListener(this::onAddReloadListeners);
     }
@@ -103,5 +107,4 @@ public class SpiceOfLifeBobo {
     public static ResourceLocation id(String path) {
         return new ResourceLocation(MOD_ID, path);
     }
-
 }

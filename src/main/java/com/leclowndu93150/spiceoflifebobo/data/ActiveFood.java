@@ -105,6 +105,29 @@ public class ActiveFood {
         return maxDuration;
     }
 
+    /**
+     * Add duration to this food (used for stacking)
+     * @param additionalDuration The additional duration to add
+     * @return The new total duration
+     */
+    public int addDuration(int additionalDuration) {
+        // Add the new duration
+        this.duration += additionalDuration;
+
+        // You can choose to cap the duration or not
+        // Option 1: Cap at maximum original duration
+        // this.duration = Math.min(this.duration, this.maxDuration);
+
+        // Option 2: Cap at a multiple of the original duration
+        int maxStackedDuration = this.maxDuration * 3; // Allow up to 3x duration
+        this.duration = Math.min(this.duration, maxStackedDuration);
+
+        // Option 3: Update the max duration as well (no cap)
+        // this.maxDuration += additionalDuration;
+
+        return this.duration;
+    }
+
     public float getRemainingDurationPercent() {
         return (float) duration / maxDuration;
     }

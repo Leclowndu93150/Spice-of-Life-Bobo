@@ -25,6 +25,7 @@ public class SpiceOfLifeConfig {
         public final ForgeConfigSpec.BooleanValue keepFoodOnDeath;
         public final ForgeConfigSpec.BooleanValue showTooltips;
         public final ForgeConfigSpec.IntValue defaultFoodMemory;
+        public final ForgeConfigSpec.DoubleValue lowTimePercentage;
 
         public Common(ForgeConfigSpec.Builder builder) {
             builder.comment("Common configuration settings").push("common");
@@ -45,15 +46,19 @@ public class SpiceOfLifeConfig {
                     .comment("Default food memory value (how many foods a player can benefit from at once)")
                     .defineInRange("defaultFoodMemory", 3, 1, 10);
 
+            lowTimePercentage = builder
+                    .comment("Percentage of time remaining when food timer turns red")
+                    .defineInRange("lowTimePercentage", 0.2D, 0.0D, 1.0D);
+
             builder.pop();
         }
     }
 
     public static class Client {
         public final ForgeConfigSpec.BooleanValue showFoodHud;
+        public final ForgeConfigSpec.BooleanValue useLargeIcons;
         public final ForgeConfigSpec.IntValue hudOffsetX;
         public final ForgeConfigSpec.IntValue hudOffsetY;
-        public final ForgeConfigSpec.EnumValue<HudPosition> hudPosition;
 
         public Client(ForgeConfigSpec.Builder builder) {
             builder.comment("Client configuration settings").push("client");
@@ -62,9 +67,9 @@ public class SpiceOfLifeConfig {
                     .comment("Show food HUD")
                     .define("showFoodHud", true);
 
-            hudPosition = builder
-                    .comment("HUD position")
-                    .defineEnum("hudPosition", HudPosition.TOP_RIGHT);
+            useLargeIcons = builder
+                    .comment("Use large icons in food HUD")
+                    .define("useLargeIcons", false);
 
             hudOffsetX = builder
                     .comment("HUD X offset from position")
@@ -76,14 +81,5 @@ public class SpiceOfLifeConfig {
 
             builder.pop();
         }
-    }
-
-    public enum HudPosition {
-        TOP_LEFT,
-        TOP_RIGHT,
-        BOTTOM_LEFT,
-        BOTTOM_RIGHT,
-        CENTER_LEFT,
-        CENTER_RIGHT
     }
 }
