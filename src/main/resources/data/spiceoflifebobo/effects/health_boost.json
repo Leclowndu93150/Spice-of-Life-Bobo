@@ -1,0 +1,13 @@
+{
+  "duration": 12000,
+  "attributes": [
+    {
+      "name": "minecraft:generic.max_health",
+      "amount": 4.0,
+      "operation": "add"
+    }
+  ],
+  "items": [
+    "minecraft:bread"
+  ]
+}

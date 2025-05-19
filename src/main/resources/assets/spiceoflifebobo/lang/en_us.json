@@ -1,0 +1,25 @@
+{
+  "itemGroup.spiceoflifebobo": "Spice of Life: BOBO Edition",
+
+  "item.spiceoflifebobo.laxative": "Laxative",
+  "tooltip.spiceoflifebobo.laxative": "Clears all active food effects",
+
+  "attribute.spiceoflifebobo.food_memory": "Food Memory",
+
+  "message.spiceoflifebobo.stomach_full": "You cannot eat more food! Your stomach is full (%s foods max)",
+  "message.spiceoflifebobo.stomach_cleared": "Your stomach feels empty again",
+
+  "tooltip.spiceoflifebobo.effects": "Effects:",
+  "tooltip.spiceoflifebobo.duration.minutes": "%s min %s sec",
+  "tooltip.spiceoflifebobo.duration.seconds": "%s sec",
+  "tooltip.spiceoflifebobo.cannot_eat": "Cannot eat: Stomach full (%s foods max)",
+
+  "config.spiceoflifebobo.disableHunger": "Disable Hunger",
+  "config.spiceoflifebobo.keepFoodOnDeath": "Keep Food on Death",
+  "config.spiceoflifebobo.showTooltips": "Show Tooltips",
+  "config.spiceoflifebobo.defaultFoodMemory": "Default Food Memory",
+  "config.spiceoflifebobo.showFoodHud": "Show Food HUD",
+  "config.spiceoflifebobo.hudPosition": "HUD Position",
+  "config.spiceoflifebobo.hudOffsetX": "HUD X Offset",
+  "config.spiceoflifebobo.hudOffsetY": "HUD Y Offset"
+}

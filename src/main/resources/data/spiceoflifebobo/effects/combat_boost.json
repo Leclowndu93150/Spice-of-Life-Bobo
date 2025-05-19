@@ -1,0 +1,18 @@
+{
+  "duration": 6000,
+  "attributes": [
+    {
+      "name": "minecraft:generic.attack_damage",
+      "amount": 2.0,
+      "operation": "add"
+    },
+    {
+      "name": "minecraft:generic.attack_speed",
+      "amount": 0.1,
+      "operation": "multiply_base"
+    }
+  ],
+  "items": [
+    "minecraft:golden_carrot"
+  ]
+}

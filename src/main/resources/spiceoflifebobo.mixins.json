@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.leclowndu93150.spiceoflifebobo.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "spiceoflifebobo.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "ForgeGuiMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

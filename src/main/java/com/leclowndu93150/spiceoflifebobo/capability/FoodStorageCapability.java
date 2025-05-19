@@ -1,0 +1,72 @@
+package com.leclowndu93150.spiceoflifebobo.capability;
+
+import com.leclowndu93150.spiceoflifebobo.SpiceOfLifeBobo;
+import com.leclowndu93150.spiceoflifebobo.api.IFoodStorage;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.capabilities.*;
+import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+public class FoodStorageCapability {
+    public static final ResourceLocation CAPABILITY_ID = new ResourceLocation(SpiceOfLifeBobo.MOD_ID, "food_storage");
+
+    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class RegistrationHandler {
+        @SubscribeEvent
+        public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+            event.register(IFoodStorage.class);
+        }
+    }
+    @Mod.EventBusSubscriber
+    public static class EventHandler {
+        @SubscribeEvent
+        public static void attachCapabilities(AttachCapabilitiesEvent<Entity> event) {
+            if (event.getObject() instanceof Player) {
+                FoodStorageProvider provider = new FoodStorageProvider();
+                event.addCapability(CAPABILITY_ID, provider);
+            }
+        }
+
+        @SubscribeEvent
+        public static void playerClone(PlayerEvent.Clone event) {
+            event.getOriginal().getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(oldStorage -> {
+                event.getEntity().getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(newStorage -> {
+                    CompoundTag nbt = ((INBTSerializable<CompoundTag>) oldStorage).serializeNBT();
+                    ((INBTSerializable<CompoundTag>) newStorage).deserializeNBT(nbt);
+                });
+            });
+        }
+    }
+
+    public static class FoodStorageProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
+        private final LazyOptional<IFoodStorage> instance = LazyOptional.of(FoodStorage::new);
+
+        @Nonnull
+        @Override
+        public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+            return SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY.orEmpty(cap, instance);
+        }
+
+        @Override
+        public CompoundTag serializeNBT() {
+            return instance.map(f -> ((INBTSerializable<CompoundTag>) f).serializeNBT())
+                    .orElse(new CompoundTag());
+        }
+
+        @Override
+        public void deserializeNBT(CompoundTag nbt) {
+            instance.ifPresent(f -> ((INBTSerializable<CompoundTag>) f).deserializeNBT(nbt));
+        }
+    }
+}

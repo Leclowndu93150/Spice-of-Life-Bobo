@@ -1,0 +1,13 @@
+{
+  "duration": 9600,
+  "attributes": [
+    {
+      "name": "minecraft:generic.movement_speed",
+      "amount": 0.2,
+      "operation": "multiply_base"
+    }
+  ],
+  "items": [
+    "minecraft:cooked_beef"
+  ]
+}
