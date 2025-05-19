@@ -76,16 +76,13 @@ public class ClientEvents {
             int offset = 1;
             int size = useLargeIcons ? 14 : 9;
 
-            // Render one slot per food type, but properly show count
             for (Map.Entry<Item, List<ActiveFood>> entry : foodsByType.entrySet()) {
                 Item foodItem = entry.getKey();
                 List<ActiveFood> foodsOfType = entry.getValue();
                 if (foodsOfType.isEmpty()) continue;
 
-                // Sort foods by duration (shortest first) - this should match the server order
                 foodsOfType.sort(Comparator.comparing(ActiveFood::getDuration));
 
-                // The first food in the list is the one that's ticking
                 ActiveFood activeTicking = foodsOfType.get(0);
 
                 renderFoodTypeSlot(event.getGuiGraphics(), activeTicking, foodsOfType.size(), width, size, offset, height, useLargeIcons, foodStorage);
@@ -94,7 +91,7 @@ public class ClientEvents {
                 if (mouseX >= startWidth && mouseX <= startWidth + size &&
                         mouseY >= height && mouseY <= height + size) {
                     hoveredFoodItem = foodItem;
-                    hoveredFoods = new ArrayList<>(foodsOfType); // Make a copy to avoid modification
+                    hoveredFoods = new ArrayList<>(foodsOfType);
                 }
 
                 offset++;
@@ -131,46 +128,37 @@ public class ClientEvents {
             minutes = String.format("%.0f", time);
         }
 
-        // Draw slot background
         graphics.fill(startWidth, height, startWidth + size, height + size, bgColor);
-        // Draw timer bar
         graphics.fill(startWidth, Math.max(height, height - barHeight + size), startWidth + size, height + size, barColor);
 
-        // Center the item in the slot
         var pose = graphics.pose();
         pose.pushPose();
 
-        // Scale and center like the Valheim mod
         float scale = useLargeIcons ? 0.75f : 0.5f;
         pose.scale(scale, scale, scale);
 
-        // Position the item centered in the slot
         float scaleFactor = 1f / scale;
-        float centerX = (startWidth + size/2f) * scaleFactor - 8f; // 8 is half of item renderer size (16)
+        float centerX = (startWidth + size/2f) * scaleFactor - 8f;
         float centerY = (height + size/2f) * scaleFactor - 8f;
 
-        // Render the item
         graphics.renderItem(foodStack, (int)centerX, (int)centerY);
 
         pose.popPose();
 
-        // Draw the time remaining
         int textColor = isSeconds ? FastColor.ARGB32.color(255, 237, 57, 57) : FastColor.ARGB32.color(255, 255, 255, 255);
         int textX = startWidth;
         if (minutes.length() == 1) {
-            textX += size / 2 - 2; // Center single digit
+            textX += size / 2 - 2;
         } else {
-            textX += size / 2 - 5; // Center double digit
+            textX += size / 2 - 5;
         }
         graphics.drawString(client.font, minutes, textX, height + 10, textColor);
 
-        // Show a count if there are multiple of this food
         if (count > 1) {
             String countText = "x" + count;
             graphics.drawString(client.font, countText, startWidth + 2, height, yellow);
         }
 
-        // Show a "+" if there are multiple effects
         if (activeTicking.getEffects().size() > 1) {
             graphics.drawString(client.font, "+" + (activeTicking.getEffects().size() - 1), startWidth + size - 6, height, yellow);
         }
@@ -186,7 +174,6 @@ public class ClientEvents {
         ItemStack foodStack = new ItemStack(firstFood.getItem());
         tooltip.add(foodStack.getHoverName());
 
-        // Show how many of this food type are active
         if (foodsOfType.size() > 1) {
             tooltip.add(Component.literal("x" + foodsOfType.size() + " " + foodStack.getHoverName().getString())
                     .withStyle(ChatFormatting.YELLOW));
@@ -194,7 +181,6 @@ public class ClientEvents {
 
         tooltip.add(Component.literal(""));
 
-        // Show durations for all foods of this type
         for (int i = 0; i < foodsOfType.size(); i++) {
             ActiveFood food = foodsOfType.get(i);
             int seconds = food.getDuration() / 20;
@@ -219,10 +205,8 @@ public class ClientEvents {
         tooltip.add(Component.literal(""));
         tooltip.add(Component.translatable("tooltip.spiceoflifebobo.effects").withStyle(ChatFormatting.GOLD));
 
-        // Show effects for the first food (they should all have the same effects)
         for (FoodEffect effect : firstFood.getEffects()) {
             for (FoodAttributeModifier modifier : effect.getAttributeModifiers()) {
-                // Calculate stacked effect potency
                 double baseAmount = modifier.getAmount();
                 double stackedAmount = baseAmount * foodsOfType.size();
 
@@ -278,7 +262,6 @@ public class ClientEvents {
                             .withStyle(ChatFormatting.RED));
                 }
 
-                // Show current stack count if applicable
                 Item item = stack.getItem();
                 int count = foodStorage.getFoodTypeCount(item);
                 if (count > 0) {

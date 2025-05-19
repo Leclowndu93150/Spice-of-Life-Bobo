@@ -38,7 +38,7 @@ public class FoodEffectManager extends SimpleJsonResourceReloadListener {
             try {
                 ResourceLocation effectId = new ResourceLocation(
                         location.getNamespace(),
-                        location.getPath().substring(0, location.getPath().length() - 5)); // Remove ".json"
+                        location.getPath().substring(0, location.getPath().length() - 5));
 
                 JsonObject obj = json.getAsJsonObject();
                 FoodEffect effect = FoodEffect.fromJson(effectId, obj);

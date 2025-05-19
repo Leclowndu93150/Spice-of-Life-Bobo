@@ -20,9 +20,6 @@ public class ActiveFood {
     private int duration;
     private int maxDuration;
 
-    /**
-     * Create a new active food
-     */
     public ActiveFood(Item item, List<FoodEffect> effects) {
         this.item = item;
         this.effects = new ArrayList<>(effects);
@@ -35,9 +32,6 @@ public class ActiveFood {
         this.duration = this.maxDuration;
     }
 
-    /**
-     * Deserialize from NBT
-     */
     public ActiveFood(CompoundTag nbt) {
         ResourceLocation itemId = ResourceLocation.tryParse(nbt.getString("Item"));
         this.item = ForgeRegistries.ITEMS.getValue(itemId);
@@ -60,9 +54,6 @@ public class ActiveFood {
         }
     }
 
-    /**
-     * Serialize to NBT
-     */
     public CompoundTag serializeNBT() {
         CompoundTag nbt = new CompoundTag();
 
@@ -105,25 +96,13 @@ public class ActiveFood {
         return maxDuration;
     }
 
-    /**
-     * Add duration to this food (used for stacking)
-     * @param additionalDuration The additional duration to add
-     * @return The new total duration
-     */
     public int addDuration(int additionalDuration) {
-        // Add the new duration
         this.duration += additionalDuration;
 
-        // You can choose to cap the duration or not
-        // Option 1: Cap at maximum original duration
-        // this.duration = Math.min(this.duration, this.maxDuration);
 
-        // Option 2: Cap at a multiple of the original duration
-        int maxStackedDuration = this.maxDuration * 3; // Allow up to 3x duration
+        int maxStackedDuration = this.maxDuration * 3;
         this.duration = Math.min(this.duration, maxStackedDuration);
 
-        // Option 3: Update the max duration as well (no cap)
-        // this.maxDuration += additionalDuration;
 
         return this.duration;
     }
@@ -142,9 +121,6 @@ public class ActiveFood {
         return duration <= 0;
     }
 
-    /**
-     * Apply all attribute modifiers to the player
-     */
     public void applyModifiers(Player player) {
         for (FoodEffect effect : effects) {
             for (FoodAttributeModifier modifier : effect.getAttributeModifiers()) {
@@ -162,9 +138,6 @@ public class ActiveFood {
         }
     }
 
-    /**
-     * Remove all attribute modifiers from the player
-     */
     public void removeModifiers(Player player) {
         for (FoodEffect effect : effects) {
             for (FoodAttributeModifier modifier : effect.getAttributeModifiers()) {

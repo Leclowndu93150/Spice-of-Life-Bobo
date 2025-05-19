@@ -22,18 +22,15 @@ import javax.annotation.Nullable;
 public class FoodStorageCapability {
     public static final ResourceLocation CAPABILITY_ID = new ResourceLocation(SpiceOfLifeBobo.MOD_ID, "food_storage");
 
-    // This class handles the registration of the capability with Forge
     @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
     public static class RegistrationHandler {
         @SubscribeEvent
         public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-            // This is the only place where we should register the capability
             SpiceOfLifeBobo.LOGGER.info("Registering IFoodStorage capability");
             event.register(IFoodStorage.class);
         }
     }
 
-    // This class handles the events related to the capability
     @Mod.EventBusSubscriber
     public static class EventHandler {
         @SubscribeEvent
@@ -41,7 +38,6 @@ public class FoodStorageCapability {
             if (event.getObject() instanceof Player) {
                 FoodStorageProvider provider = new FoodStorageProvider();
                 event.addCapability(CAPABILITY_ID, provider);
-                // Ensure capability persists with the entity
                 event.addListener(provider::invalidate);
             }
         }
@@ -63,7 +59,6 @@ public class FoodStorageCapability {
         public static void onPlayerSave(PlayerEvent.SaveToFile event) {
             Player player = event.getEntity();
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(storage -> {
-                // Data is automatically saved through capability system, but we ensure player reference is updated
                 ((FoodStorage) storage).setPlayer(player);
             });
         }
@@ -72,7 +67,6 @@ public class FoodStorageCapability {
         public static void onPlayerLoad(PlayerEvent.LoadFromFile event) {
             Player player = event.getEntity();
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(storage -> {
-                // Data is automatically loaded through capability system, but we ensure player reference is updated
                 ((FoodStorage) storage).setPlayer(player);
             });
         }
@@ -98,7 +92,6 @@ public class FoodStorageCapability {
             instance.ifPresent(f -> ((INBTSerializable<CompoundTag>) f).deserializeNBT(nbt));
         }
 
-        // Add this method to properly handle capability invalidation
         void invalidate() {
             instance.invalidate();
         }

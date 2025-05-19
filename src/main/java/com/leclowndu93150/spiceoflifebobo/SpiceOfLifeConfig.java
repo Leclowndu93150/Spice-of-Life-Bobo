@@ -69,7 +69,7 @@ public class SpiceOfLifeConfig {
 
             useLargeIcons = builder
                     .comment("Use large icons in food HUD")
-                    .define("useLargeIcons", false);
+                    .define("useLargeIcons", true);
 
             hudOffsetX = builder
                     .comment("HUD X offset from position")

@@ -28,13 +28,7 @@ public class FoodAttributeModifier {
         return operation;
     }
 
-    /**
-     * Create a unique AttributeModifier for this food attribute
-     * @param foodId The ID to use as part of the UUID generation
-     * @return A new AttributeModifier
-     */
     public AttributeModifier createModifier(UUID foodId) {
-        // Create a deterministic UUID based on the food ID and attribute
         UUID modifierId = new UUID(
                 foodId.getMostSignificantBits(),
                 foodId.getLeastSignificantBits() ^ attribute.getDescriptionId().hashCode()

@@ -33,8 +33,6 @@ public class FoodEvents {
         }
 
         if (SpiceOfLifeConfig.COMMON.disableHunger.get()) {
-            // Cancel vanilla food effects (hunger/saturation)
-            // This is a failsafe, we also use a mixin to disable hunger mechanics
             player.getFoodData().setFoodLevel(player.getFoodData().getFoodLevel());
             player.getFoodData().setSaturation(player.getFoodData().getSaturationLevel());
         }
@@ -46,19 +44,14 @@ public class FoodEvents {
 
         player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
             if (foodStorage.canEatFood()) {
-                // Player can eat the food
                 foodStorage.addFood(new ActiveFood(item, effects));
             } else {
-                // Player has reached the maximum food limit
                 player.displayClientMessage(
                         Component.translatable("message.spiceoflifebobo.stomach_full", foodStorage.getMaxFoods()), true);
             }
         });
     }
 
-    /**
-     * Check if an item is food (more robust than just checking FoodProperties)
-     */
     private boolean isFood(ItemStack stack) {
         FoodProperties foodProperties = stack.getItem().getFoodProperties();
         if (foodProperties != null) {
