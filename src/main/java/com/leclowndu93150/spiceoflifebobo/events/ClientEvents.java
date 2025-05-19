@@ -39,6 +39,9 @@ public class ClientEvents {
     private static Item hoveredFoodItem = null;
     private static List<ActiveFood> hoveredFoods = null;
 
+    private static final int slotSpacing = 2; // Horizontal spacing between food slots
+    private static final int yLevelOffset = 45; // Y offset from bottom of screen
+
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
@@ -71,7 +74,8 @@ public class ClientEvents {
 
             int width = minecraft.getWindow().getGuiScaledWidth() / 2 + 91;
             boolean useLargeIcons = SpiceOfLifeConfig.CLIENT.useLargeIcons.get();
-            int height = minecraft.getWindow().getGuiScaledHeight() - 39 - (useLargeIcons ? 6 : 0);
+            // Using yLevelOffset variable instead of hardcoded 39
+            int height = minecraft.getWindow().getGuiScaledHeight() - yLevelOffset - (useLargeIcons ? 6 : 0);
 
             int offset = 1;
             int size = useLargeIcons ? 14 : 9;
@@ -87,7 +91,8 @@ public class ClientEvents {
 
                 renderFoodTypeSlot(event.getGuiGraphics(), activeTicking, foodsOfType.size(), width, size, offset, height, useLargeIcons, foodStorage);
 
-                int startWidth = width - (size * offset) - offset + 1;
+                // Using slotSpacing variable for calculating the slot position
+                int startWidth = width - (size * offset) - (slotSpacing * (offset - 1)) + 1;
                 if (mouseX >= startWidth && mouseX <= startWidth + size &&
                         mouseY >= height && mouseY <= height + size) {
                     hoveredFoodItem = foodItem;
@@ -112,9 +117,10 @@ public class ClientEvents {
         int bgColor = isDrink ? FastColor.ARGB32.color(96, 52, 104, 163) : FastColor.ARGB32.color(96, 0, 0, 0);
         int yellow = FastColor.ARGB32.color(255, 255, 191, 0);
 
-        int startWidth = width - (size * offset) - offset + 1;
+        // Updated slot position calculation using slotSpacing
+        int startWidth = width - (size * offset) - (slotSpacing * (offset - 1)) + 1;
         float ticksLeftPercent = (float) activeTicking.getDuration() / activeTicking.getMaxDuration();
-        int barHeight = Math.max(1, (int)((size + 2f) * ticksLeftPercent));
+        int barHeight = Math.max(1, (int) ((size + 2f) * ticksLeftPercent));
         int barColor = ticksLeftPercent < SpiceOfLifeConfig.COMMON.lowTimePercentage.get() ?
                 FastColor.ARGB32.color(180, 255, 10, 10) : FastColor.ARGB32.color(96, 0, 0, 0);
 
@@ -138,10 +144,10 @@ public class ClientEvents {
         pose.scale(scale, scale, scale);
 
         float scaleFactor = 1f / scale;
-        float centerX = (startWidth + size/2f) * scaleFactor - 8f;
-        float centerY = (height + size/2f) * scaleFactor - 8f;
+        float centerX = (startWidth + size / 2f) * scaleFactor - 8f;
+        float centerY = (height + size / 2f) * scaleFactor - 8f;
 
-        graphics.renderItem(foodStack, (int)centerX, (int)centerY);
+        graphics.renderItem(foodStack, (int) centerX, (int) centerY);
 
         pose.popPose();
 
@@ -154,10 +160,12 @@ public class ClientEvents {
         }
         graphics.drawString(client.font, minutes, textX, height + 10, textColor);
 
+        /*
         if (count > 1) {
             String countText = "x" + count;
             graphics.drawString(client.font, countText, startWidth + 2, height, yellow);
         }
+         */
 
         if (activeTicking.getEffects().size() > 1) {
             graphics.drawString(client.font, "+" + (activeTicking.getEffects().size() - 1), startWidth + size - 6, height, yellow);
@@ -188,7 +196,7 @@ public class ClientEvents {
             seconds %= 60;
 
             boolean isActive = foodStorage.isActiveTicking(food);
-            String prefix = foodsOfType.size() > 1 ? "#" + (i+1) + ": " : "";
+            String prefix = foodsOfType.size() > 1 ? "#" + (i + 1) + ": " : "";
             ChatFormatting color = isActive ? ChatFormatting.GREEN : ChatFormatting.GRAY;
 
             if (minutes > 0) {
