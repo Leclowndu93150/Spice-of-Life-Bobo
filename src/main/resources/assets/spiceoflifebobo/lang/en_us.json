@@ -1,25 +1,10 @@
 {
-  "itemGroup.spiceoflifebobo": "Spice of Life: BOBO Edition",
-
-  "item.spiceoflifebobo.laxative": "Laxative",
+  "message.spiceoflifebobo.already_eaten": "You've already eaten %s. Its effects must expire before eating it again.",
+  "message.spiceoflifebobo.stomach_full": "Your stomach is full! You can only benefit from %s foods at once.",
   "tooltip.spiceoflifebobo.laxative": "Clears all active food effects",
-
-  "attribute.spiceoflifebobo.food_memory": "Food Memory",
-
-  "message.spiceoflifebobo.stomach_full": "You cannot eat more food! Your stomach is full (%s foods max)",
-  "message.spiceoflifebobo.stomach_cleared": "Your stomach feels empty again",
-
-  "tooltip.spiceoflifebobo.effects": "Effects:",
-  "tooltip.spiceoflifebobo.duration.minutes": "%s min %s sec",
-  "tooltip.spiceoflifebobo.duration.seconds": "%s sec",
-  "tooltip.spiceoflifebobo.cannot_eat": "Cannot eat: Stomach full (%s foods max)",
-
-  "config.spiceoflifebobo.disableHunger": "Disable Hunger",
-  "config.spiceoflifebobo.keepFoodOnDeath": "Keep Food on Death",
-  "config.spiceoflifebobo.showTooltips": "Show Tooltips",
-  "config.spiceoflifebobo.defaultFoodMemory": "Default Food Memory",
-  "config.spiceoflifebobo.showFoodHud": "Show Food HUD",
-  "config.spiceoflifebobo.hudPosition": "HUD Position",
-  "config.spiceoflifebobo.hudOffsetX": "HUD X Offset",
-  "config.spiceoflifebobo.hudOffsetY": "HUD Y Offset"
+  "tooltip.spiceoflifebobo.effects": "Food Effects:",
+  "tooltip.spiceoflifebobo.duration.minutes": "%d min %d sec",
+  "tooltip.spiceoflifebobo.duration.seconds": "%d sec",
+  "tooltip.spiceoflifebobo.cannot_eat": "Can't eat more: Maximum foods (%d) reached",
+  "message.spiceoflifebobo.stomach_cleared": "Your stomach has been cleared!"
 }

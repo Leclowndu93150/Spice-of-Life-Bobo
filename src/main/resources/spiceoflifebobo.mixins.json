@@ -5,7 +5,11 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "spiceoflifebobo.refmap.json",
   "mixins": [
-    "FoodDataMixin"
+    "FoodDataMixin",
+    "ItemMixin",
+    "ItemStackMixin",
+    "ItemUtilsMixin",
+    "RenderOverlayMixin"
   ],
   "client": [
     "ForgeGuiMixin"

@@ -40,7 +40,7 @@ public class ClientEvents {
     private static List<ActiveFood> hoveredFoods = null;
 
     private static final int slotSpacing = 2; // Horizontal spacing between food slots
-    private static final int yLevelOffset = 45; // Y offset from bottom of screen
+    private static final int yLevelOffset = 39; // Y offset from bottom of screen
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {

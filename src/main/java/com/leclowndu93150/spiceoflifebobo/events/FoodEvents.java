@@ -43,6 +43,13 @@ public class FoodEvents {
         }
 
         player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
+            // Check if the player has already eaten this food
+            if (foodStorage.hasFood(item)) {
+                player.displayClientMessage(
+                        Component.translatable("message.spiceoflifebobo.already_eaten", item.getDescription()), true);
+                return;
+            }
+
             if (foodStorage.canEatFood()) {
                 foodStorage.addFood(new ActiveFood(item, effects));
             } else {
