@@ -16,6 +16,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
@@ -59,7 +60,7 @@ public class ClientEvents {
     public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
         if (event.getOverlay() != VanillaGuiOverlay.FOOD_LEVEL.type()) return;
 
-        if (!SpiceOfLifeConfig.CLIENT.showFoodHud.get()) return;
+        if (!SpiceOfLifeConfig.CLIENT.showFoodHud.get() || !Minecraft.getInstance().gameMode.getPlayerMode().equals(GameType.DEFAULT_MODE)) return;
 
         Minecraft minecraft = Minecraft.getInstance();
         Player player = minecraft.player;
@@ -117,7 +118,6 @@ public class ClientEvents {
         int bgColor = isDrink ? FastColor.ARGB32.color(96, 52, 104, 163) : FastColor.ARGB32.color(96, 0, 0, 0);
         int yellow = FastColor.ARGB32.color(255, 255, 191, 0);
 
-        // Updated slot position calculation using slotSpacing
         int startWidth = width - (size * offset) - (slotSpacing * (offset - 1)) + 1;
         float ticksLeftPercent = (float) activeTicking.getDuration() / activeTicking.getMaxDuration();
         int barHeight = Math.max(1, (int) ((size + 2f) * ticksLeftPercent));
@@ -149,27 +149,23 @@ public class ClientEvents {
 
         graphics.renderItem(foodStack, (int) centerX, (int) centerY);
 
-        pose.popPose();
+        pose.pushPose();
+        pose.translate(0.0f, 0.0f, 200.0f);
 
+        pose.scale(1/scale, 1/scale, 1/scale);
+
+        int textX = startWidth + (minutes.length() > 1 ? 3 : 5);
         int textColor = isSeconds ? FastColor.ARGB32.color(255, 237, 57, 57) : FastColor.ARGB32.color(255, 255, 255, 255);
-        int textX = startWidth;
-        if (minutes.length() == 1) {
-            textX += size / 2 - 2;
-        } else {
-            textX += size / 2 - 5;
-        }
-        graphics.drawString(client.font, minutes, textX, height + 10, textColor);
 
-        /*
-        if (count > 1) {
-            String countText = "x" + count;
-            graphics.drawString(client.font, countText, startWidth + 2, height, yellow);
-        }
-         */
+        graphics.drawString(client.font, minutes, textX, height + 4, textColor);
 
         if (activeTicking.getEffects().size() > 1) {
             graphics.drawString(client.font, "+" + (activeTicking.getEffects().size() - 1), startWidth + size - 6, height, yellow);
         }
+
+        pose.popPose();
+
+        pose.popPose();
     }
 
     private static void renderFoodTooltip(GuiGraphics graphics, List<ActiveFood> foodsOfType,

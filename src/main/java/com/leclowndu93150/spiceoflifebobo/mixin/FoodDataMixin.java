@@ -46,19 +46,23 @@ public class FoodDataMixin {
         }
     }
 
+    /*
     @Inject(method = "setFoodLevel", at = @At("HEAD"), cancellable = true)
     private void onSetFoodLevel(int foodLevel, CallbackInfo ci) {
         if (SpiceOfLifeConfig.COMMON.disableHunger.get()) {
             ci.cancel();
         }
     }
+     */
 
+    /*
     @Inject(method = "setSaturation", at = @At("HEAD"), cancellable = true)
     private void onSetSaturation(float saturation, CallbackInfo ci) {
         if (SpiceOfLifeConfig.COMMON.disableHunger.get()) {
             ci.cancel();
         }
     }
+     */
 
     @Inject(method = "addExhaustion", at = @At("HEAD"), cancellable = true)
     private void onAddExhaustion(float exhaustion, CallbackInfo ci) {

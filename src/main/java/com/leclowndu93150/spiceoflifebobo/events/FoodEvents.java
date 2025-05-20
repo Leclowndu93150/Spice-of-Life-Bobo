@@ -9,6 +9,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -18,6 +19,24 @@ import java.util.List;
 
 @Mod.EventBusSubscriber
 public class FoodEvents {
+
+    private static int hungerRefreshTimer = 0;
+    private static final int HUNGER_REFRESH_INTERVAL = 20;
+
+    @SubscribeEvent
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && SpiceOfLifeConfig.COMMON.disableHunger.get()) {
+            hungerRefreshTimer++;
+
+            if (hungerRefreshTimer >= HUNGER_REFRESH_INTERVAL) {
+                hungerRefreshTimer = 0;
+
+                Player player = event.player;
+                player.getFoodData().setFoodLevel(20);
+                player.getFoodData().setSaturation(20.0F);
+            }
+        }
+    }
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onFoodEaten(LivingEntityUseItemEvent.Finish event) {
@@ -32,9 +51,10 @@ public class FoodEvents {
             return;
         }
 
-        if (SpiceOfLifeConfig.COMMON.disableHunger.get()) {
-            player.getFoodData().setFoodLevel(player.getFoodData().getFoodLevel());
-            player.getFoodData().setSaturation(player.getFoodData().getSaturationLevel());
+        if (!SpiceOfLifeConfig.COMMON.disableHunger.get()) {
+        } else {
+            player.getFoodData().setFoodLevel(20);
+            player.getFoodData().setSaturation(20.0F);
         }
 
         List<FoodEffect> effects = SpiceOfLifeBobo.getFoodEffectManager().getEffectsForFood(item);
@@ -43,7 +63,6 @@ public class FoodEvents {
         }
 
         player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
-            // Check if the player has already eaten this food
             if (foodStorage.hasFood(item)) {
                 player.displayClientMessage(
                         Component.translatable("message.spiceoflifebobo.already_eaten", item.getDescription()), true);
