@@ -44,6 +44,8 @@ public class FoodEvents {
             return;
         }
 
+        if (player.level().isClientSide()) return;
+
         ItemStack stack = event.getItem();
         Item item = stack.getItem();
 
@@ -51,8 +53,7 @@ public class FoodEvents {
             return;
         }
 
-        if (!SpiceOfLifeConfig.COMMON.disableHunger.get()) {
-        } else {
+        if (SpiceOfLifeConfig.COMMON.disableHunger.get()) {
             player.getFoodData().setFoodLevel(20);
             player.getFoodData().setSaturation(20.0F);
         }
@@ -68,6 +69,8 @@ public class FoodEvents {
                         Component.translatable("message.spiceoflifebobo.already_eaten", item.getDescription()), true);
                 return;
             }
+
+            SpiceOfLifeBobo.LOGGER.info("Max foods for player: {}", foodStorage.getMaxFoods());
 
             if (foodStorage.canEatFood()) {
                 foodStorage.addFood(new ActiveFood(item, effects));

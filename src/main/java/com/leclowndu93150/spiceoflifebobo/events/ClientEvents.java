@@ -75,7 +75,6 @@ public class ClientEvents {
 
             int width = minecraft.getWindow().getGuiScaledWidth() / 2 + 91;
             boolean useLargeIcons = SpiceOfLifeConfig.CLIENT.useLargeIcons.get();
-            // Using yLevelOffset variable instead of hardcoded 39
             int height = minecraft.getWindow().getGuiScaledHeight() - yLevelOffset - (useLargeIcons ? 6 : 0);
 
             int offset = 1;

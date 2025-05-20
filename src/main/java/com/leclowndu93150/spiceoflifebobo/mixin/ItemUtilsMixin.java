@@ -16,7 +16,6 @@ public class ItemUtilsMixin {
     @Inject(method = "startUsingInstantly", at = @At("HEAD"), cancellable = true)
     private static void onStartUsingInstantly(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
         ItemStack itemstack = player.getItemInHand(hand);
-        // Always allow the player to start using the item
         player.startUsingItem(hand);
         cir.setReturnValue(InteractionResultHolder.consume(itemstack));
     }

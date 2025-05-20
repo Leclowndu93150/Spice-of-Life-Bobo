@@ -12,6 +12,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import net.minecraft.world.item.CreativeModeTab;
@@ -21,6 +22,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -66,6 +68,7 @@ public class SpiceOfLifeBobo {
 
         modEventBus.addListener(this::setup);
         modEventBus.addListener(this::clientSetup);
+        modEventBus.addListener(this::setupAttributes);
 
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SpiceOfLifeConfig.COMMON_SPEC);
@@ -91,6 +94,10 @@ public class SpiceOfLifeBobo {
 
     private void clientSetup(final FMLClientSetupEvent event) {
         MinecraftForge.EVENT_BUS.register(new ClientEvents());
+    }
+
+    private void setupAttributes(final EntityAttributeModificationEvent event) {
+        event.add(EntityType.PLAYER, FOOD_MEMORY.get());
     }
 
     private void onAddReloadListeners(AddReloadListenerEvent event) {

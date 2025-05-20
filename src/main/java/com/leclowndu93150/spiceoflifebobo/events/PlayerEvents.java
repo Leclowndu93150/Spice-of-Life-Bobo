@@ -33,11 +33,11 @@ public class PlayerEvents {
     @SubscribeEvent
     public void onPlayerJoin(EntityJoinLevelEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
+            syncAttributes(player);
+
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
                 ((FoodStorage) foodStorage).setPlayer(player);
-
                 reapplyAllFoodEffects((FoodStorage) foodStorage, player);
-
                 NetworkHandler.sendToPlayer(new SyncFoodStoragePacket(foodStorage), player);
             });
         }
@@ -122,5 +122,14 @@ public class PlayerEvents {
                 serverPlayer.connection.resetPosition();
             }
         });
+    }
+
+    private void syncAttributes(ServerPlayer player) {
+        AttributeInstance attr = player.getAttribute(SpiceOfLifeBobo.FOOD_MEMORY.get());
+        if (attr != null) {
+            double currentValue = attr.getBaseValue();
+            attr.setBaseValue(currentValue + 0.01);
+            attr.setBaseValue(currentValue);
+        }
     }
 }

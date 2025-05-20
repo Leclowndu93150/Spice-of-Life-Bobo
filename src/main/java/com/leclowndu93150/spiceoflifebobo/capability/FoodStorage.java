@@ -65,7 +65,13 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
 
     @Override
     public boolean canEatFood() {
-        return activeFoods.size() < getMaxFoods();
+        int currentFoods = activeFoods.size();
+        int maxFoods = getMaxFoods();
+        if (player != null && !player.level().isClientSide()) {
+            SpiceOfLifeBobo.LOGGER.info("Can eat food check: current={}, max={}, result={}",
+                    currentFoods, maxFoods, currentFoods < maxFoods);
+        }
+        return currentFoods < maxFoods;
     }
 
     @Override
@@ -182,14 +188,18 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
     @Override
     public int getMaxFoods() {
         if (player == null) {
+            SpiceOfLifeBobo.LOGGER.debug("Player is null, using config value: {}", SpiceOfLifeConfig.COMMON.defaultFoodMemory.get());
             return SpiceOfLifeConfig.COMMON.defaultFoodMemory.get();
         }
 
         AttributeInstance attribute = player.getAttribute(SpiceOfLifeBobo.FOOD_MEMORY.get());
         if (attribute != null) {
-            return (int) Math.floor(attribute.getValue());
+            double value = attribute.getValue();
+            SpiceOfLifeBobo.LOGGER.debug("Food memory attribute value: {}", value);
+            return (int) Math.floor(value);
         }
 
+        SpiceOfLifeBobo.LOGGER.warn("Food memory attribute is null for player {}", player.getName().getString());
         return SpiceOfLifeConfig.COMMON.defaultFoodMemory.get();
     }
 
