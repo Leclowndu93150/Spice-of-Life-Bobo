@@ -25,6 +25,7 @@ public class SpiceOfLifeConfig {
         public final ForgeConfigSpec.BooleanValue keepFoodOnDeath;
         public final ForgeConfigSpec.BooleanValue showTooltips;
         public final ForgeConfigSpec.IntValue defaultFoodMemory;
+        public final ForgeConfigSpec.IntValue defaultHealingCooldown;
         public final ForgeConfigSpec.DoubleValue lowTimePercentage;
 
         public Common(ForgeConfigSpec.Builder builder) {
@@ -45,6 +46,10 @@ public class SpiceOfLifeConfig {
             defaultFoodMemory = builder
                     .comment("Default food memory value (how many foods a player can benefit from at once)")
                     .defineInRange("defaultFoodMemory", 3, 1, 10);
+
+            defaultHealingCooldown = builder
+                    .comment("Default healing item cooldown in ticks (20 ticks = 1 second)")
+                    .defineInRange("defaultHealingCooldown", 600, 0, 72000);
 
             lowTimePercentage = builder
                     .comment("Percentage of time remaining when food timer turns red")

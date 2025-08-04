@@ -4,9 +4,11 @@ import com.leclowndu93150.spiceoflifebobo.api.IFoodStorage;
 import com.leclowndu93150.spiceoflifebobo.capability.FoodStorageCapability;
 import com.leclowndu93150.spiceoflifebobo.events.ClientEvents;
 import com.leclowndu93150.spiceoflifebobo.events.FoodEvents;
+import com.leclowndu93150.spiceoflifebobo.events.HealingEvents;
 import com.leclowndu93150.spiceoflifebobo.events.PlayerEvents;
 import com.leclowndu93150.spiceoflifebobo.items.ModItems;
 import com.leclowndu93150.spiceoflifebobo.manager.FoodEffectManager;
+import com.leclowndu93150.spiceoflifebobo.manager.HealingItemManager;
 import com.leclowndu93150.spiceoflifebobo.networking.NetworkHandler;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.Registries;
@@ -61,6 +63,7 @@ public class SpiceOfLifeBobo {
     public static final Capability<IFoodStorage> FOOD_STORAGE_CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {});
 
     private static FoodEffectManager foodEffectManager;
+    private static HealingItemManager healingItemManager;
 
 
     public SpiceOfLifeBobo() {
@@ -81,6 +84,7 @@ public class SpiceOfLifeBobo {
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new FoodEvents());
+        MinecraftForge.EVENT_BUS.register(new HealingEvents());
         MinecraftForge.EVENT_BUS.register(new PlayerEvents());
         MinecraftForge.EVENT_BUS.register(FoodStorageCapability.EventHandler.class);
 
@@ -90,6 +94,7 @@ public class SpiceOfLifeBobo {
     private void setup(final FMLCommonSetupEvent event) {
         event.enqueueWork(NetworkHandler::init);
         foodEffectManager = new FoodEffectManager();
+        healingItemManager = new HealingItemManager();
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
@@ -102,10 +107,15 @@ public class SpiceOfLifeBobo {
 
     private void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(foodEffectManager);
+        event.addListener(healingItemManager);
     }
 
     public static FoodEffectManager getFoodEffectManager() {
         return foodEffectManager;
+    }
+
+    public static HealingItemManager getHealingItemManager() {
+        return healingItemManager;
     }
 
     public static ResourceLocation id(String path) {

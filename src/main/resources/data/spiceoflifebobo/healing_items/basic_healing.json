@@ -1,0 +1,13 @@
+{
+  "items": [
+    "minecraft:apple",
+    "minecraft:cooked_beef",
+    "minecraft:cooked_porkchop"
+  ],
+  "is_healing_item": true,
+  "instant_heal": {
+    "percent_max_hp": 0.05,
+    "percent_missing_hp": 0.02,
+    "flat_hp": 1.0
+  }
+}

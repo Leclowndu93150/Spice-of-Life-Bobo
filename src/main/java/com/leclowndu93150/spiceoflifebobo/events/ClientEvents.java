@@ -6,6 +6,7 @@ import com.leclowndu93150.spiceoflifebobo.api.IFoodStorage;
 import com.leclowndu93150.spiceoflifebobo.data.ActiveFood;
 import com.leclowndu93150.spiceoflifebobo.data.FoodAttributeModifier;
 import com.leclowndu93150.spiceoflifebobo.data.FoodEffect;
+import com.leclowndu93150.spiceoflifebobo.data.HealingItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -228,6 +229,34 @@ public class ClientEvents {
         List<Component> tooltip = event.getToolTip();
 
         List<FoodEffect> effects = SpiceOfLifeBobo.getFoodEffectManager().getEffectsForFood(stack.getItem());
+        HealingItem healingItem = SpiceOfLifeBobo.getHealingItemManager().getHealingItemForFood(stack.getItem());
+        
+        if (effects.isEmpty() && healingItem == null) return;
+        
+        // Add healing item tooltip
+        if (healingItem != null && healingItem.isHealingItem()) {
+            tooltip.add(Component.literal(""));
+            tooltip.add(Component.translatable("tooltip.spiceoflifebobo.healing_item").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
+            
+            if (healingItem.getInstantHeal() != null && healingItem.getInstantHeal().hasHealing()) {
+                HealingItem.InstantHeal instantHeal = healingItem.getInstantHeal();
+                addHealAmountTooltips(tooltip, "Instant:", instantHeal.getPercentMaxHp(), instantHeal.getPercentMissingHp(), instantHeal.getFlatHp());
+            }
+            
+            if (healingItem.getHealOverTime() != null && healingItem.getHealOverTime().hasHealing()) {
+                HealingItem.HealOverTime healOverTime = healingItem.getHealOverTime();
+                int duration = healOverTime.getDuration() / 20;
+                int interval = healOverTime.getInterval() / 20;
+                tooltip.add(Component.literal("Over Time: Every " + interval + "s for " + duration + "s")
+                    .withStyle(ChatFormatting.DARK_GREEN));
+                addHealAmountTooltips(tooltip, "  ", 0, 0, healOverTime.getAmountFlat());
+                if (healOverTime.getAmountMax() > 0) {
+                    tooltip.add(Component.literal("  +" + String.format("%.1f%% Max HP", healOverTime.getAmountMax() * 100))
+                        .withStyle(ChatFormatting.GREEN));
+                }
+            }
+        }
+        
         if (effects.isEmpty()) return;
 
         tooltip.add(Component.literal(""));
@@ -312,5 +341,22 @@ public class ClientEvents {
         }
 
         return Component.literal(String.format(format, amount, attributeName.getString())).withStyle(color);
+    }
+    
+    private static void addHealAmountTooltips(List<Component> tooltip, String prefix, double percentMax, double percentMissing, double flat) {
+        if (flat > 0) {
+            tooltip.add(Component.literal(prefix + " +" + String.format("%.1f HP", flat))
+                .withStyle(ChatFormatting.GREEN));
+        }
+        
+        if (percentMax > 0) {
+            tooltip.add(Component.literal(prefix + " +" + String.format("%.1f%% Max HP", percentMax * 100))
+                .withStyle(ChatFormatting.GREEN));
+        }
+        
+        if (percentMissing > 0) {
+            tooltip.add(Component.literal(prefix + " +" + String.format("%.1f%% Missing HP", percentMissing * 100))
+                .withStyle(ChatFormatting.GREEN));
+        }
     }
 }

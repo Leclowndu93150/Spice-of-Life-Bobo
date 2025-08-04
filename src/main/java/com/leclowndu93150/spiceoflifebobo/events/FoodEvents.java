@@ -53,6 +53,10 @@ public class FoodEvents {
             return;
         }
 
+        if (SpiceOfLifeBobo.getHealingItemManager().isHealingItem(item)) {
+            return;
+        }
+
         if (SpiceOfLifeConfig.COMMON.disableHunger.get()) {
             player.getFoodData().setFoodLevel(20);
             player.getFoodData().setSaturation(20.0F);

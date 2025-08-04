@@ -1,8 +1,10 @@
 {
   "message.spiceoflifebobo.already_eaten": "You've already eaten %s. Its effects must expire before eating it again.",
   "message.spiceoflifebobo.stomach_full": "Your stomach is full! You can only benefit from %s foods at once.",
+  "message.spiceoflifebobo.healing_cooldown": "Healing item cooldown: %d seconds remaining",
   "tooltip.spiceoflifebobo.laxative": "Clears all active food effects",
   "tooltip.spiceoflifebobo.effects": "Food Effects:",
+  "tooltip.spiceoflifebobo.healing_item": "Healing Item",
   "tooltip.spiceoflifebobo.duration.minutes": "%d min %d sec",
   "tooltip.spiceoflifebobo.duration.seconds": "%d sec",
   "tooltip.spiceoflifebobo.cannot_eat": "Can't eat more: Maximum foods (%d) reached",
