@@ -10,6 +10,7 @@ import com.leclowndu93150.spiceoflifebobo.items.ModItems;
 import com.leclowndu93150.spiceoflifebobo.manager.FoodEffectManager;
 import com.leclowndu93150.spiceoflifebobo.manager.HealingItemManager;
 import com.leclowndu93150.spiceoflifebobo.networking.NetworkHandler;
+import com.leclowndu93150.spiceoflifebobo.networking.SyncDatapacksPacket;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -24,6 +25,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -89,6 +91,7 @@ public class SpiceOfLifeBobo {
         MinecraftForge.EVENT_BUS.register(FoodStorageCapability.EventHandler.class);
 
         MinecraftForge.EVENT_BUS.addListener(this::onAddReloadListeners);
+        MinecraftForge.EVENT_BUS.addListener(this::onDatapackSync);
     }
 
     private void setup(final FMLCommonSetupEvent event) {
@@ -108,6 +111,23 @@ public class SpiceOfLifeBobo {
     private void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(foodEffectManager);
         event.addListener(healingItemManager);
+    }
+
+    private void onDatapackSync(OnDatapackSyncEvent event) {
+        SyncDatapacksPacket datapackPacket = new SyncDatapacksPacket(
+                foodEffectManager.getAllEffects(),
+                foodEffectManager.getAllFoodEffects(),
+                healingItemManager.getAllHealingItems(),
+                healingItemManager.getAllItemToHealingItem()
+        );
+
+        if (event.getPlayer() != null) {
+            NetworkHandler.sendToPlayer(datapackPacket, event.getPlayer());
+        } else {
+            event.getPlayerList().getPlayers().forEach(player -> {
+                NetworkHandler.sendToPlayer(datapackPacket, player);
+            });
+        }
     }
 
     public static FoodEffectManager getFoodEffectManager() {

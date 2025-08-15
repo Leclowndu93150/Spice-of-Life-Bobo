@@ -85,4 +85,37 @@ public class FoodEffect {
 
         return effect;
     }
+
+    public JsonObject toJson() {
+        JsonObject json = new JsonObject();
+        json.addProperty("duration", duration);
+        
+        JsonArray attributes = new JsonArray();
+        for (FoodAttributeModifier modifier : attributeModifiers) {
+            JsonObject attributeJson = new JsonObject();
+            attributeJson.addProperty("name", ForgeRegistries.ATTRIBUTES.getKey(modifier.getAttribute()).toString());
+            attributeJson.addProperty("amount", modifier.getAmount());
+            
+            String operationStr;
+            switch (modifier.getOperation()) {
+                case ADDITION:
+                    operationStr = "add";
+                    break;
+                case MULTIPLY_BASE:
+                    operationStr = "multiply_base";
+                    break;
+                case MULTIPLY_TOTAL:
+                    operationStr = "multiply_total";
+                    break;
+                default:
+                    operationStr = "add";
+                    break;
+            }
+            attributeJson.addProperty("operation", operationStr);
+            attributes.add(attributeJson);
+        }
+        json.add("attributes", attributes);
+        
+        return json;
+    }
 }

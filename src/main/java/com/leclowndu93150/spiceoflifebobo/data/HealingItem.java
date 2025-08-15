@@ -66,6 +66,31 @@ public class HealingItem {
         return new HealingItem(id, isHealingItem, cooldownTicks, instantHeal, healOverTime);
     }
 
+    public JsonObject toJson() {
+        JsonObject json = new JsonObject();
+        json.addProperty("is_healing_item", isHealingItem);
+        json.addProperty("cooldown_ticks", cooldownTicks);
+        
+        if (instantHeal != null) {
+            JsonObject instantHealJson = new JsonObject();
+            instantHealJson.addProperty("percent_max_hp", instantHeal.getPercentMaxHp());
+            instantHealJson.addProperty("percent_missing_hp", instantHeal.getPercentMissingHp());
+            instantHealJson.addProperty("flat_hp", instantHeal.getFlatHp());
+            json.add("instant_heal", instantHealJson);
+        }
+        
+        if (healOverTime != null) {
+            JsonObject healOverTimeJson = new JsonObject();
+            healOverTimeJson.addProperty("duration", healOverTime.getDuration());
+            healOverTimeJson.addProperty("interval", healOverTime.getInterval());
+            healOverTimeJson.addProperty("amount_flat", healOverTime.getAmountFlat());
+            healOverTimeJson.addProperty("amount_max", healOverTime.getAmountMax());
+            json.add("heal_over_time", healOverTimeJson);
+        }
+        
+        return json;
+    }
+
     public static class InstantHeal {
         private final double percentMaxHp;
         private final double percentMissingHp;

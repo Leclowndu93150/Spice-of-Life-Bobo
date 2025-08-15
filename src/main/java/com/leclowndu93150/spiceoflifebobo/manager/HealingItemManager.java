@@ -102,4 +102,61 @@ public class HealingItemManager extends SimpleJsonResourceReloadListener {
         
         return hasInstant || hasOverTime;
     }
+
+    public Map<ResourceLocation, HealingItem> getAllHealingItems() {
+        return new HashMap<>(healingItems);
+    }
+
+    public Map<Item, ResourceLocation> getAllItemToHealingItem() {
+        return new HashMap<>(itemToHealingItem);
+    }
+
+    public void syncFromServer(Map<ResourceLocation, String> healingItemData, Map<String, String> mappingData) {
+        healingItems.clear();
+        itemToHealingItem.clear();
+        healingItemSet.clear();
+        
+        // Deserialize healing items
+        for (Map.Entry<ResourceLocation, String> entry : healingItemData.entrySet()) {
+            try {
+                ResourceLocation healingItemId = entry.getKey();
+                if (healingItemId != null && healingItemId.getNamespace() != null && healingItemId.getPath() != null) {
+                    JsonObject json = GSON.fromJson(entry.getValue(), JsonObject.class);
+                    HealingItem healingItem = HealingItem.fromJson(healingItemId, json);
+                    healingItems.put(healingItemId, healingItem);
+                } else {
+                    SpiceOfLifeBobo.LOGGER.warn("Skipping invalid healing item ID: {}", healingItemId);
+                }
+            } catch (Exception e) {
+                SpiceOfLifeBobo.LOGGER.error("Error syncing healing item {}: {}", entry.getKey(), e.getMessage());
+            }
+        }
+        
+        // Deserialize mappings
+        for (Map.Entry<String, String> entry : mappingData.entrySet()) {
+            try {
+                ResourceLocation itemLocation = ResourceLocation.tryParse(entry.getKey());
+                ResourceLocation healingItemId = ResourceLocation.tryParse(entry.getValue());
+                
+                if (itemLocation != null && itemLocation.getNamespace() != null && itemLocation.getPath() != null
+                        && healingItemId != null && healingItemId.getNamespace() != null && healingItemId.getPath() != null) {
+                    Item item = ForgeRegistries.ITEMS.getValue(itemLocation);
+                    HealingItem healingItem = healingItems.get(healingItemId);
+                    
+                    if (item != null && healingItem != null) {
+                        itemToHealingItem.put(item, healingItemId);
+                        if (healingItem.isHealingItem()) {
+                            healingItemSet.add(item);
+                        }
+                    }
+                } else {
+                    SpiceOfLifeBobo.LOGGER.warn("Skipping invalid healing item mapping - item: {}, healingItem: {}", entry.getKey(), entry.getValue());
+                }
+            } catch (Exception e) {
+                SpiceOfLifeBobo.LOGGER.error("Error syncing healing item mapping {}: {}", entry.getKey(), e.getMessage());
+            }
+        }
+        
+        SpiceOfLifeBobo.LOGGER.info("Synced {} healing items for {} foods from server", healingItems.size(), itemToHealingItem.size());
+    }
 }

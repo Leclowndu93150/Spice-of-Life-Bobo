@@ -7,6 +7,8 @@ import com.leclowndu93150.spiceoflifebobo.data.ActiveFood;
 import com.leclowndu93150.spiceoflifebobo.data.FoodAttributeModifier;
 import com.leclowndu93150.spiceoflifebobo.data.FoodEffect;
 import com.leclowndu93150.spiceoflifebobo.data.HealingItem;
+import com.leclowndu93150.spiceoflifebobo.data.HealingPenalty;
+import com.leclowndu93150.spiceoflifebobo.events.HealingEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -27,10 +29,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = SpiceOfLifeBobo.MOD_ID, value = Dist.CLIENT)
@@ -255,6 +254,19 @@ public class ClientEvents {
                         .withStyle(ChatFormatting.GREEN));
                 }
             }
+            
+            // Show current penalty if active
+            Player player = event.getEntity();
+            if (player != null && SpiceOfLifeConfig.COMMON.enableHealingPenalty.get()) {
+                HealingPenalty penalty = HealingEvents.getHealingPenalty(player);
+                if (penalty != null && penalty.hasActive()) {
+                    double multiplier = penalty.getHealingMultiplier(SpiceOfLifeConfig.COMMON.healingPenaltyPerStack.get());
+                    int penaltyPercent = (int) ((1.0 - multiplier) * 100);
+                    tooltip.add(Component.translatable("tooltip.spiceoflifebobo.healing_penalty_active", 
+                            penalty.getPenaltyStacks(), penaltyPercent)
+                            .withStyle(ChatFormatting.RED));
+                }
+            }
         }
         
         if (effects.isEmpty()) return;
@@ -285,7 +297,7 @@ public class ClientEvents {
             }
         }
 
-        Player player = Minecraft.getInstance().player;
+        Player player = event.getEntity();
         if (player != null) {
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
                 if (!foodStorage.canEatFood()) {

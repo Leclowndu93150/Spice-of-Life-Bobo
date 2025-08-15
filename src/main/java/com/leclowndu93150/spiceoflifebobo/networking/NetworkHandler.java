@@ -30,6 +30,12 @@ public class NetworkHandler {
                 SyncFoodStoragePacket::decode,
                 SyncFoodStoragePacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+
+        CHANNEL.registerMessage(id++, SyncDatapacksPacket.class,
+                SyncDatapacksPacket::encode,
+                SyncDatapacksPacket::decode,
+                SyncDatapacksPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
 
     public static void sendToPlayer(Object packet, ServerPlayer player) {

@@ -6,6 +6,7 @@ import com.leclowndu93150.spiceoflifebobo.capability.FoodStorage;
 import com.leclowndu93150.spiceoflifebobo.data.ActiveFood;
 import com.leclowndu93150.spiceoflifebobo.networking.NetworkHandler;
 import com.leclowndu93150.spiceoflifebobo.networking.SyncFoodStoragePacket;
+import com.leclowndu93150.spiceoflifebobo.networking.SyncDatapacksPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -53,6 +54,15 @@ public class PlayerEvents {
 
                 NetworkHandler.sendToPlayer(new SyncFoodStoragePacket(foodStorage), player);
             });
+
+            // Sync datapack information to the client
+            SyncDatapacksPacket datapackPacket = new SyncDatapacksPacket(
+                    SpiceOfLifeBobo.getFoodEffectManager().getAllEffects(),
+                    SpiceOfLifeBobo.getFoodEffectManager().getAllFoodEffects(),
+                    SpiceOfLifeBobo.getHealingItemManager().getAllHealingItems(),
+                    SpiceOfLifeBobo.getHealingItemManager().getAllItemToHealingItem()
+            );
+            NetworkHandler.sendToPlayer(datapackPacket, player);
         }
     }
 

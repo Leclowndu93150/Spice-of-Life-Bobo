@@ -26,6 +26,10 @@ public class SpiceOfLifeConfig {
         public final ForgeConfigSpec.BooleanValue showTooltips;
         public final ForgeConfigSpec.IntValue defaultFoodMemory;
         public final ForgeConfigSpec.IntValue defaultHealingCooldown;
+        public final ForgeConfigSpec.BooleanValue enableHealingPenalty;
+        public final ForgeConfigSpec.IntValue healingPenaltyDuration;
+        public final ForgeConfigSpec.DoubleValue healingPenaltyPerStack;
+        public final ForgeConfigSpec.IntValue maxHealingPenaltyStacks;
         public final ForgeConfigSpec.DoubleValue lowTimePercentage;
 
         public Common(ForgeConfigSpec.Builder builder) {
@@ -50,6 +54,22 @@ public class SpiceOfLifeConfig {
             defaultHealingCooldown = builder
                     .comment("Default healing item cooldown in ticks (20 ticks = 1 second)")
                     .defineInRange("defaultHealingCooldown", 600, 0, 72000);
+
+            enableHealingPenalty = builder
+                    .comment("Enable diminishing returns for healing items to prevent spam healing")
+                    .define("enableHealingPenalty", true);
+
+            healingPenaltyDuration = builder
+                    .comment("Duration in ticks that healing penalty lasts (20 ticks = 1 second)")
+                    .defineInRange("healingPenaltyDuration", 1200, 0, 72000);
+
+            healingPenaltyPerStack = builder
+                    .comment("Healing reduction per penalty stack (0.2 = 20% less healing per stack)")
+                    .defineInRange("healingPenaltyPerStack", 0.25, 0.0, 1.0);
+
+            maxHealingPenaltyStacks = builder
+                    .comment("Maximum penalty stacks (at max stacks, healing is nearly zero)")
+                    .defineInRange("maxHealingPenaltyStacks", 4, 1, 10);
 
             lowTimePercentage = builder
                     .comment("Percentage of time remaining when food timer turns red")

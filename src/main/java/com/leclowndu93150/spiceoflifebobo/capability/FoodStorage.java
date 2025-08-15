@@ -195,11 +195,9 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
         AttributeInstance attribute = player.getAttribute(SpiceOfLifeBobo.FOOD_MEMORY.get());
         if (attribute != null) {
             double value = attribute.getValue();
-            SpiceOfLifeBobo.LOGGER.debug("Food memory attribute value: {}", value);
             return (int) Math.floor(value);
         }
 
-        SpiceOfLifeBobo.LOGGER.warn("Food memory attribute is null for player {}", player.getName().getString());
         return SpiceOfLifeConfig.COMMON.defaultFoodMemory.get();
     }
 

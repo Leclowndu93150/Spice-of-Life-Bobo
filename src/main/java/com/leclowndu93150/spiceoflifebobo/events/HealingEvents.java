@@ -1,8 +1,10 @@
 package com.leclowndu93150.spiceoflifebobo.events;
 
 import com.leclowndu93150.spiceoflifebobo.SpiceOfLifeBobo;
+import com.leclowndu93150.spiceoflifebobo.SpiceOfLifeConfig;
 import com.leclowndu93150.spiceoflifebobo.data.ActiveHealOverTime;
 import com.leclowndu93150.spiceoflifebobo.data.HealingItem;
+import com.leclowndu93150.spiceoflifebobo.data.HealingPenalty;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -23,6 +25,7 @@ public class HealingEvents {
     
     private static final Map<UUID, Long> healingItemCooldowns = new HashMap<>();
     private static final Map<UUID, ActiveHealOverTime> activeHealOverTime = new HashMap<>();
+    private static final Map<UUID, HealingPenalty> healingPenalties = new HashMap<>();
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onFoodStartUse(LivingEntityUseItemEvent.Start event) {
@@ -74,6 +77,16 @@ public class HealingEvents {
 
         if (healingItem.isHealingItem()) {
             healingItemCooldowns.put(playerId, currentTime + healingItem.getCooldownTicks());
+            
+            // Add healing penalty stack if enabled
+            if (SpiceOfLifeConfig.COMMON.enableHealingPenalty.get()) {
+                HealingPenalty penalty = healingPenalties.computeIfAbsent(playerId, k -> new HealingPenalty());
+                penalty.addStack(
+                    SpiceOfLifeConfig.COMMON.healingPenaltyDuration.get(),
+                    SpiceOfLifeConfig.COMMON.maxHealingPenaltyStacks.get()
+                );
+                healingPenalties.put(playerId, penalty);
+            }
         }
 
         if (healingItem.getInstantHeal() != null && healingItem.getInstantHeal().hasHealing()) {
@@ -98,14 +111,23 @@ public class HealingEvents {
         }
 
         UUID playerId = event.player.getUUID();
+        
+        // Tick heal over time
         ActiveHealOverTime healOverTime = activeHealOverTime.get(playerId);
-
         if (healOverTime != null) {
             if (!healOverTime.tick()) {
                 activeHealOverTime.remove(playerId);
             } else if (healOverTime.shouldHeal()) {
                 applyHealOverTime(event.player, healOverTime);
                 healOverTime.resetHealTimer();
+            }
+        }
+        
+        // Tick healing penalties
+        HealingPenalty penalty = healingPenalties.get(playerId);
+        if (penalty != null) {
+            if (!penalty.tick()) {
+                healingPenalties.remove(playerId);
             }
         }
     }
@@ -120,6 +142,23 @@ public class HealingEvents {
         healAmount += instantHeal.getPercentMissingHp() * missingHealth;
         healAmount += instantHeal.getFlatHp();
 
+        // Apply healing penalty if enabled
+        if (SpiceOfLifeConfig.COMMON.enableHealingPenalty.get()) {
+            HealingPenalty penalty = healingPenalties.get(player.getUUID());
+            if (penalty != null && penalty.hasActive()) {
+                double multiplier = penalty.getHealingMultiplier(SpiceOfLifeConfig.COMMON.healingPenaltyPerStack.get());
+                healAmount *= multiplier;
+                
+                // Show penalty message
+                if (penalty.getPenaltyStacks() > 0) {
+                    int penaltyPercent = (int) ((1.0 - multiplier) * 100);
+                    player.displayClientMessage(
+                            Component.translatable("message.spiceoflifebobo.healing_penalty", 
+                                    penalty.getPenaltyStacks(), penaltyPercent), true);
+                }
+            }
+        }
+
         if (healAmount > 0) {
             float newHealth = Math.min(maxHealth, currentHealth + (float) healAmount);
             player.setHealth(newHealth);
@@ -133,6 +172,15 @@ public class HealingEvents {
         double healAmount = 0;
         healAmount += healOverTime.getAmountFlat();
         healAmount += healOverTime.getAmountMax() * maxHealth;
+
+        // Apply healing penalty if enabled
+        if (SpiceOfLifeConfig.COMMON.enableHealingPenalty.get()) {
+            HealingPenalty penalty = healingPenalties.get(player.getUUID());
+            if (penalty != null && penalty.hasActive()) {
+                double multiplier = penalty.getHealingMultiplier(SpiceOfLifeConfig.COMMON.healingPenaltyPerStack.get());
+                healAmount *= multiplier;
+            }
+        }
 
         if (healAmount > 0) {
             float newHealth = Math.min(maxHealth, currentHealth + (float) healAmount);
@@ -157,5 +205,14 @@ public class HealingEvents {
         }
         long remainingTicks = cooldownEnd - player.level().getGameTime();
         return Math.max(0, (int) (remainingTicks / 20));
+    }
+
+    public static HealingPenalty getHealingPenalty(Player player) {
+        return healingPenalties.get(player.getUUID());
+    }
+
+    public static boolean hasHealingPenalty(Player player) {
+        HealingPenalty penalty = healingPenalties.get(player.getUUID());
+        return penalty != null && penalty.hasActive();
     }
 }
