@@ -12,5 +12,6 @@
   "tooltip.spiceoflifebobo.duration.minutes": "%d min %d sec",
   "tooltip.spiceoflifebobo.duration.seconds": "%d sec",
   "tooltip.spiceoflifebobo.cannot_eat": "Can't eat more: Maximum foods (%d) reached",
-  "message.spiceoflifebobo.stomach_cleared": "Your stomach has been cleared!"
+  "message.spiceoflifebobo.stomach_cleared": "Your stomach has been cleared!",
+  "enchantment.spiceoflifebobo.foodie": "Foodie"
 }

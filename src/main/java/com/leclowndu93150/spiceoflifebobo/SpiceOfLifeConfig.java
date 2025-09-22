@@ -31,6 +31,9 @@ public class SpiceOfLifeConfig {
         public final ForgeConfigSpec.DoubleValue healingPenaltyPerStack;
         public final ForgeConfigSpec.IntValue maxHealingPenaltyStacks;
         public final ForgeConfigSpec.DoubleValue lowTimePercentage;
+        public final ForgeConfigSpec.DoubleValue baseFoodAttributeBoost;
+        public final ForgeConfigSpec.DoubleValue foodConsumptionSpeedIncrease;
+        public final ForgeConfigSpec.DoubleValue foodDurationDecrease;
 
         public Common(ForgeConfigSpec.Builder builder) {
             builder.comment("Common configuration settings").push("common");
@@ -74,6 +77,22 @@ public class SpiceOfLifeConfig {
             lowTimePercentage = builder
                     .comment("Percentage of time remaining when food timer turns red")
                     .defineInRange("lowTimePercentage", 0.2D, 0.0D, 1.0D);
+
+            builder.comment("Foodie Enchantment Settings").push("foodie_enchantment");
+
+            baseFoodAttributeBoost = builder
+                    .comment("Base food attribute bonus boost percentage per enchantment level")
+                    .defineInRange("baseFoodAttributeBoost", 0.25D, 0.0D, 2.0D);
+
+            foodConsumptionSpeedIncrease = builder
+                    .comment("Food consumption speed increase percentage per enchantment level")
+                    .defineInRange("foodConsumptionSpeedIncrease", 0.15D, 0.0D, 1.0D);
+
+            foodDurationDecrease = builder
+                    .comment("Food duration decrease percentage (fixed for all levels)")
+                    .defineInRange("foodDurationDecrease", 0.20D, 0.0D, 1.99D);
+
+            builder.pop();
 
             builder.pop();
         }

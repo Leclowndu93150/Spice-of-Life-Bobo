@@ -1,6 +1,7 @@
 package com.leclowndu93150.spiceoflifebobo.data;
 
 import com.leclowndu93150.spiceoflifebobo.SpiceOfLifeBobo;
+import com.leclowndu93150.spiceoflifebobo.events.EnchantmentEvents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -19,6 +20,21 @@ public class ActiveFood {
     private final UUID uuid;
     private int duration;
     private int maxDuration;
+
+    public ActiveFood(Item item, List<FoodEffect> effects, Player player) {
+        this.item = item;
+        this.effects = new ArrayList<>(effects);
+        this.uuid = UUID.randomUUID();
+
+        this.maxDuration = 0;
+        for (FoodEffect effect : effects) {
+            this.maxDuration = Math.max(this.maxDuration, effect.getDuration());
+        }
+        
+        double durationMultiplier = EnchantmentEvents.getFoodieDurationMultiplier(player);
+        this.maxDuration = (int) Math.max(1, this.maxDuration * durationMultiplier);
+        this.duration = this.maxDuration;
+    }
 
     public ActiveFood(Item item, List<FoodEffect> effects) {
         this.item = item;
@@ -122,17 +138,26 @@ public class ActiveFood {
     }
 
     public void applyModifiers(Player player) {
+        double foodieMultiplier = EnchantmentEvents.getFoodieAttributeMultiplier(player);
+        
         for (FoodEffect effect : effects) {
             for (FoodAttributeModifier modifier : effect.getAttributeModifiers()) {
                 AttributeInstance attribute = player.getAttribute(modifier.getAttribute());
                 if (attribute != null) {
+                    double boostedAmount = modifier.getAmount() * foodieMultiplier;
                     AttributeModifier attributeModifier = modifier.createModifier(uuid);
+                    AttributeModifier boostedModifier = new AttributeModifier(
+                        attributeModifier.getId(),
+                        attributeModifier.getName(),
+                        boostedAmount,
+                        attributeModifier.getOperation()
+                    );
 
-                    if (attribute.getModifier(attributeModifier.getId()) != null) {
-                        attribute.removeModifier(attributeModifier.getId());
+                    if (attribute.getModifier(boostedModifier.getId()) != null) {
+                        attribute.removeModifier(boostedModifier.getId());
                     }
 
-                    attribute.addTransientModifier(attributeModifier);
+                    attribute.addTransientModifier(boostedModifier);
                 }
             }
         }

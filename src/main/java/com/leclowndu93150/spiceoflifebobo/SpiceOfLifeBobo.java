@@ -2,7 +2,9 @@ package com.leclowndu93150.spiceoflifebobo;
 
 import com.leclowndu93150.spiceoflifebobo.api.IFoodStorage;
 import com.leclowndu93150.spiceoflifebobo.capability.FoodStorageCapability;
+import com.leclowndu93150.spiceoflifebobo.enchantments.ModEnchantments;
 import com.leclowndu93150.spiceoflifebobo.events.ClientEvents;
+import com.leclowndu93150.spiceoflifebobo.events.EnchantmentEvents;
 import com.leclowndu93150.spiceoflifebobo.events.FoodEvents;
 import com.leclowndu93150.spiceoflifebobo.events.HealingEvents;
 import com.leclowndu93150.spiceoflifebobo.events.PlayerEvents;
@@ -20,6 +22,8 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
@@ -58,6 +62,18 @@ public class SpiceOfLifeBobo {
                     .title(Component.translatable("itemGroup.spiceoflifebobo"))
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.LAXATIVE.get());
+                        
+                        ItemStack enchantedBook1 = new ItemStack(Items.ENCHANTED_BOOK);
+                        enchantedBook1.enchant(ModEnchantments.FOODIE.get(), 1);
+                        output.accept(enchantedBook1);
+                        
+                        ItemStack enchantedBook2 = new ItemStack(Items.ENCHANTED_BOOK);
+                        enchantedBook2.enchant(ModEnchantments.FOODIE.get(), 2);
+                        output.accept(enchantedBook2);
+                        
+                        ItemStack enchantedBook3 = new ItemStack(Items.ENCHANTED_BOOK);
+                        enchantedBook3.enchant(ModEnchantments.FOODIE.get(), 3);
+                        output.accept(enchantedBook3);
                     })
                     .build()
     );
@@ -80,6 +96,7 @@ public class SpiceOfLifeBobo {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, SpiceOfLifeConfig.CLIENT_SPEC);
 
         ModItems.ITEMS.register(modEventBus);
+        ModEnchantments.ENCHANTMENTS.register(modEventBus);
 
         ATTRIBUTES.register(modEventBus);
         CREATIVE_MODE_TABS.register(modEventBus);
@@ -88,6 +105,7 @@ public class SpiceOfLifeBobo {
         MinecraftForge.EVENT_BUS.register(new FoodEvents());
         MinecraftForge.EVENT_BUS.register(new HealingEvents());
         MinecraftForge.EVENT_BUS.register(new PlayerEvents());
+        MinecraftForge.EVENT_BUS.register(new EnchantmentEvents());
         MinecraftForge.EVENT_BUS.register(FoodStorageCapability.EventHandler.class);
 
         MinecraftForge.EVENT_BUS.addListener(this::onAddReloadListeners);
