@@ -77,7 +77,12 @@ public class FoodEvents {
             SpiceOfLifeBobo.LOGGER.info("Max foods for player: {}", foodStorage.getMaxFoods());
 
             if (foodStorage.canEatFood()) {
+                float healthPercentage = player.getHealth() / player.getMaxHealth();
+                
                 foodStorage.addFood(new ActiveFood(item, effects, player));
+                
+                float newHealth = healthPercentage * player.getMaxHealth();
+                player.setHealth(newHealth);
             } else {
                 player.displayClientMessage(
                         Component.translatable("message.spiceoflifebobo.stomach_full", foodStorage.getMaxFoods()), true);
