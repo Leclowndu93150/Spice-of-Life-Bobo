@@ -164,13 +164,26 @@ public class ActiveFood {
     }
 
     public void removeModifiers(Player player) {
+        boolean hasMaxHealthModifier = false;
+        
         for (FoodEffect effect : effects) {
             for (FoodAttributeModifier modifier : effect.getAttributeModifiers()) {
                 AttributeInstance attribute = player.getAttribute(modifier.getAttribute());
                 if (attribute != null) {
+                    if (modifier.getAttribute() == net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH) {
+                        hasMaxHealthModifier = true;
+                    }
                     AttributeModifier tempModifier = modifier.createModifier(uuid);
                     attribute.removeModifier(tempModifier.getId());
                 }
+            }
+        }
+        
+        if (hasMaxHealthModifier && !player.level().isClientSide()) {
+            float currentHealth = player.getHealth();
+            float newMaxHealth = player.getMaxHealth();
+            if (currentHealth > newMaxHealth) {
+                player.setHealth(newMaxHealth);
             }
         }
     }
