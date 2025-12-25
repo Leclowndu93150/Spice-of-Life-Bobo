@@ -36,6 +36,12 @@ public class NetworkHandler {
                 SyncDatapacksPacket::decode,
                 SyncDatapacksPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+
+        CHANNEL.registerMessage(id++, RequestSyncPacket.class,
+                RequestSyncPacket::encode,
+                RequestSyncPacket::decode,
+                RequestSyncPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void sendToPlayer(Object packet, ServerPlayer player) {

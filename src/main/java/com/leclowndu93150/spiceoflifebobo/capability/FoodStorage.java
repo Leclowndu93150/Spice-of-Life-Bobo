@@ -18,25 +18,20 @@ import java.util.*;
 
 public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> {
     private final List<ActiveFood> activeFoods = new ArrayList<>();
-
     private final Map<Item, List<ActiveFood>> foodsByType = new HashMap<>();
-
     private final Map<Item, ActiveFood> activeTicking = new HashMap<>();
-
     private Player player = null;
-
     private String playerUUID = "";
-
     private boolean needsReapply = false;
 
     public void setPlayer(Player player) {
-        boolean wasNull = this.player == null;
+        Player oldPlayer = this.player;
         this.player = player;
 
         if (player != null) {
             this.playerUUID = player.getStringUUID();
 
-            if (wasNull || needsReapply) {
+            if (oldPlayer == null || oldPlayer != player || needsReapply) {
                 for (ActiveFood food : activeFoods) {
                     food.applyModifiers(player);
                 }
@@ -65,29 +60,18 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
 
     @Override
     public boolean canEatFood() {
-        int currentFoods = activeFoods.size();
-        int maxFoods = getMaxFoods();
-        if (player != null && !player.level().isClientSide()) {
-            SpiceOfLifeBobo.LOGGER.info("Can eat food check: current={}, max={}, result={}",
-                    currentFoods, maxFoods, currentFoods < maxFoods);
-        }
-        return currentFoods < maxFoods;
+        return activeFoods.size() < getMaxFoods();
     }
 
     @Override
     public void addFood(ActiveFood food) {
         if (player == null) return;
-
         if (!canEatFood()) return;
 
         activeFoods.add(food);
-
         food.applyModifiers(player);
-
         updateFoodsByType();
-
         updateActiveTicking();
-
         syncToClient();
     }
 
@@ -97,11 +81,8 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
 
         if (activeFoods.remove(food)) {
             food.removeModifiers(player);
-
             updateFoodsByType();
-
             updateActiveTicking();
-
             syncToClient();
         }
     }
@@ -111,7 +92,6 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
         if (player == null) return;
 
         List<ActiveFood> foodsCopy = new ArrayList<>(activeFoods);
-
         for (ActiveFood food : foodsCopy) {
             removeFood(food);
         }
@@ -126,7 +106,6 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
 
         for (Map.Entry<Item, ActiveFood> entry : activeTicking.entrySet()) {
             ActiveFood food = entry.getValue();
-
             food.tick();
 
             if (food.isExpired()) {
@@ -143,7 +122,6 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
         if (changed) {
             updateFoodsByType();
             updateActiveTicking();
-
             syncToClient();
         }
     }
@@ -157,7 +135,6 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
 
             if (!foods.isEmpty()) {
                 foods.sort(Comparator.comparing(ActiveFood::getDuration));
-
                 activeTicking.put(foodItem, foods.get(0));
             }
         }
@@ -188,14 +165,12 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
     @Override
     public int getMaxFoods() {
         if (player == null) {
-            SpiceOfLifeBobo.LOGGER.debug("Player is null, using config value: {}", SpiceOfLifeConfig.COMMON.defaultFoodMemory.get());
             return SpiceOfLifeConfig.COMMON.defaultFoodMemory.get();
         }
 
         AttributeInstance attribute = player.getAttribute(SpiceOfLifeBobo.FOOD_MEMORY.get());
         if (attribute != null) {
-            double value = attribute.getValue();
-            return (int) Math.floor(value);
+            return (int) Math.floor(attribute.getValue());
         }
 
         return SpiceOfLifeConfig.COMMON.defaultFoodMemory.get();
@@ -260,9 +235,7 @@ public class FoodStorage implements IFoodStorage, INBTSerializable<CompoundTag> 
         }
 
         updateFoodsByType();
-
         updateActiveTicking();
-
         needsReapply = true;
 
         if (nbt.contains("PlayerUUID")) {

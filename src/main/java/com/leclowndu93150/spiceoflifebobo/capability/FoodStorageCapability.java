@@ -1,7 +1,6 @@
 package com.leclowndu93150.spiceoflifebobo.capability;
 
 import com.leclowndu93150.spiceoflifebobo.SpiceOfLifeBobo;
-import com.leclowndu93150.spiceoflifebobo.SpiceOfLifeConfig;
 import com.leclowndu93150.spiceoflifebobo.api.IFoodStorage;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -26,7 +25,6 @@ public class FoodStorageCapability {
     public static class RegistrationHandler {
         @SubscribeEvent
         public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-            SpiceOfLifeBobo.LOGGER.info("Registering IFoodStorage capability");
             event.register(IFoodStorage.class);
         }
     }
@@ -39,19 +37,6 @@ public class FoodStorageCapability {
                 FoodStorageProvider provider = new FoodStorageProvider();
                 event.addCapability(CAPABILITY_ID, provider);
                 event.addListener(provider::invalidate);
-            }
-        }
-
-        @SubscribeEvent
-        public static void playerClone(PlayerEvent.Clone event) {
-            if (!event.isWasDeath() || SpiceOfLifeConfig.COMMON.keepFoodOnDeath.get()) {
-                event.getOriginal().getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(oldStorage -> {
-                    event.getEntity().getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(newStorage -> {
-                        CompoundTag nbt = ((INBTSerializable<CompoundTag>) oldStorage).serializeNBT();
-                        ((INBTSerializable<CompoundTag>) newStorage).deserializeNBT(nbt);
-                        ((FoodStorage) newStorage).setPlayer(event.getEntity());
-                    });
-                });
             }
         }
 
@@ -73,23 +58,26 @@ public class FoodStorageCapability {
     }
 
     public static class FoodStorageProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
-        private final LazyOptional<IFoodStorage> instance = LazyOptional.of(FoodStorage::new);
+        private final FoodStorage storage = new FoodStorage();
+        private LazyOptional<IFoodStorage> instance = LazyOptional.of(() -> storage);
 
         @Nonnull
         @Override
         public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+            if (!instance.isPresent()) {
+                instance = LazyOptional.of(() -> storage);
+            }
             return SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY.orEmpty(cap, instance);
         }
 
         @Override
         public CompoundTag serializeNBT() {
-            return instance.map(f -> ((INBTSerializable<CompoundTag>) f).serializeNBT())
-                    .orElse(new CompoundTag());
+            return ((INBTSerializable<CompoundTag>) storage).serializeNBT();
         }
 
         @Override
         public void deserializeNBT(CompoundTag nbt) {
-            instance.ifPresent(f -> ((INBTSerializable<CompoundTag>) f).deserializeNBT(nbt));
+            ((INBTSerializable<CompoundTag>) storage).deserializeNBT(nbt);
         }
 
         void invalidate() {

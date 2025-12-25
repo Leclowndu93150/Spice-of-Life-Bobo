@@ -35,9 +35,7 @@ public class SyncFoodStoragePacket {
 
     public static void handle(SyncFoodStoragePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> {
-            handleClient(packet);
-        });
+        context.enqueueWork(() -> handleClient(packet));
         context.setPacketHandled(true);
     }
 

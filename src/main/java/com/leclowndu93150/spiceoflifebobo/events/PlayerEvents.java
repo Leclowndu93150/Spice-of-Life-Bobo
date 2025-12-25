@@ -22,7 +22,7 @@ public class PlayerEvents {
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
+        if (event.phase == TickEvent.Phase.END && !event.player.level().isClientSide()) {
             Player player = event.player;
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
                 ((FoodStorage) foodStorage).setPlayer(player);
@@ -36,9 +36,12 @@ public class PlayerEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             syncAttributes(player);
 
+            if (player.isChangingDimension()) {
+                return;
+            }
+
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
                 ((FoodStorage) foodStorage).setPlayer(player);
-                reapplyAllFoodEffects((FoodStorage) foodStorage, player);
                 NetworkHandler.sendToPlayer(new SyncFoodStoragePacket(foodStorage), player);
             });
         }
@@ -49,13 +52,10 @@ public class PlayerEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
                 ((FoodStorage) foodStorage).setPlayer(player);
-
                 reapplyAllFoodEffects((FoodStorage) foodStorage, player);
-
                 NetworkHandler.sendToPlayer(new SyncFoodStoragePacket(foodStorage), player);
             });
 
-            // Sync datapack information to the client
             SyncDatapacksPacket datapackPacket = new SyncDatapacksPacket(
                     SpiceOfLifeBobo.getFoodEffectManager().getAllEffects(),
                     SpiceOfLifeBobo.getFoodEffectManager().getAllFoodEffects(),
@@ -71,9 +71,7 @@ public class PlayerEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
                 ((FoodStorage) foodStorage).setPlayer(player);
-
                 reapplyAllFoodEffects((FoodStorage) foodStorage, player);
-
                 NetworkHandler.sendToPlayer(new SyncFoodStoragePacket(foodStorage), player);
             });
         }
@@ -82,9 +80,11 @@ public class PlayerEvents {
     @SubscribeEvent
     public void onPlayerChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
-                reapplyAllFoodEffects((FoodStorage) foodStorage, player);
+            player.reviveCaps();
 
+            player.getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(foodStorage -> {
+                ((FoodStorage) foodStorage).setPlayer(player);
+                reapplyAllFoodEffects((FoodStorage) foodStorage, player);
                 NetworkHandler.sendToPlayer(new SyncFoodStoragePacket(foodStorage), player);
             });
         }
@@ -95,43 +95,43 @@ public class PlayerEvents {
         boolean keepFoodOnDeath = SpiceOfLifeConfig.COMMON.keepFoodOnDeath.get();
 
         if (keepFoodOnDeath || !event.isWasDeath()) {
+            event.getOriginal().reviveCaps();
             event.getEntity().getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(newStorage -> {
                 event.getOriginal().getCapability(SpiceOfLifeBobo.FOOD_STORAGE_CAPABILITY).ifPresent(oldStorage -> {
                     ((FoodStorage) newStorage).deserializeNBT(((FoodStorage) oldStorage).serializeNBT());
                     ((FoodStorage) newStorage).setPlayer(event.getEntity());
                 });
             });
+            event.getOriginal().invalidateCaps();
         }
     }
 
     private void reapplyAllFoodEffects(FoodStorage foodStorage, Player player) {
         if (player == null || player.level().isClientSide()) return;
 
+        float healthPercent = player.getHealth() / player.getMaxHealth();
+
         for (ActiveFood food : foodStorage.getActiveFoods()) {
             food.removeModifiers(player);
         }
 
-        player.level().getServer().execute(() -> {
-            for (ActiveFood food : foodStorage.getActiveFoods()) {
-                food.applyModifiers(player);
+        for (ActiveFood food : foodStorage.getActiveFoods()) {
+            food.applyModifiers(player);
+        }
+
+        AttributeInstance maxHealthAttr = player.getAttribute(Attributes.MAX_HEALTH);
+        if (maxHealthAttr != null) {
+            float newMaxHealth = (float) maxHealthAttr.getValue();
+            player.setHealth(healthPercent * newMaxHealth);
+
+            if (player.getHealth() < 1.0F) {
+                player.setHealth(1.0F);
             }
+        }
 
-            AttributeInstance maxHealthAttr = player.getAttribute(Attributes.MAX_HEALTH);
-            if (maxHealthAttr != null) {
-                float healthPercent = player.getHealth() / player.getMaxHealth();
-                float newMaxHealth = (float) maxHealthAttr.getValue();
-
-                player.setHealth(healthPercent * newMaxHealth);
-
-                if (player.getHealth() < 1.0F) {
-                    player.setHealth(1.0F);
-                }
-            }
-
-            if (player instanceof ServerPlayer serverPlayer) {
-                serverPlayer.connection.resetPosition();
-            }
-        });
+        if (player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.connection.resetPosition();
+        }
     }
 
     private void syncAttributes(ServerPlayer player) {

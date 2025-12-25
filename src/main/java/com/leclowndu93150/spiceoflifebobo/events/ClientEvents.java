@@ -24,10 +24,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import com.leclowndu93150.spiceoflifebobo.networking.NetworkHandler;
+import com.leclowndu93150.spiceoflifebobo.networking.RequestSyncPacket;
 
 import java.util.*;
 
@@ -42,6 +45,11 @@ public class ClientEvents {
 
     private static final int slotSpacing = 2; // Horizontal spacing between food slots
     private static final int yLevelOffset = 39; // Y offset from bottom of screen
+
+    @SubscribeEvent
+    public static void onClientPlayerClone(ClientPlayerNetworkEvent.Clone event) {
+        NetworkHandler.sendToServer(new RequestSyncPacket());
+    }
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
